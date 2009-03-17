@@ -1,0 +1,58 @@
+group Greedy;
+
+header(precedences) ::= <<
+grammar HaskellExpressions; //REMOVE when tree rewriting is working
+@members {
+public static final int LEFT = 1;
+public static final int RIGHT = 2;
+static int[] prec = new int[tokenNames.length];
+static int[] uprec = new int[tokenNames.length];
+static int[] postprec = new int[tokenNames.length];
+static int[] assoc = new int[tokenNames.length];
+static int lookupTokenFromGrammarString(String token) {
+	for (int i = 0; i \< tokenNames.length; i++)
+		if (tokenNames[i].equals(token))
+			return i;
+	throw new RuntimeException("can't dereference token: " + token);
+}
+static {
+   <precedences:prec(precl=it,level=i)>
+}
+int nextp(int p) {
+   int prevOpType = input.LA(-1);
+   if ( assoc[prevOpType]==LEFT ) return prec[prevOpType]+1;
+   else return prec[prevOpType];
+}
+}
+>>
+
+prec(precl,level) ::= <<
+
+<precl:{p|
+    <if(p.binary)>
+        prec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
+    <endif>
+    <if(p.unary)>
+        uprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
+    <endif>
+    <if(p.rightAssoc)>
+        assoc[lookupTokenFromGrammarString("<p.tokenText>")] = RIGHT;
+    <else>
+		assoc[lookupTokenFromGrammarString("<p.tokenText>")] = LEFT;
+	<endif>
+}>
+>>
+
+
+
+
+exprRule(name,terminal,bops,uops,buildTree) ::= <<
+<name>[int p]
+   :   <terminal>
+       (   {prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>[nextp(p)]
+
+       )*
+   |   <if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif> {int q=uprec[input.LA(-1)];} <name>[q]
+   ;
+
+>>
