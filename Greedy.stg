@@ -2,6 +2,10 @@ group Greedy;
 
 header(precedences) ::= <<
 grammar HaskellExpressions; //REMOVE when tree rewriting is working
+@header {
+import java.util.Map;
+import java.util.HashMap;
+}
 @members {
 public static final int LEFT = 1;
 public static final int RIGHT = 2;
@@ -9,14 +13,14 @@ static int[] prec = new int[tokenNames.length];
 static int[] uprec = new int[tokenNames.length];
 static int[] postprec = new int[tokenNames.length];
 static int[] assoc = new int[tokenNames.length];
+static Map\<String, Integer\> tokenLiteralMap = new HashMap\<String, Integer\>();
 static int lookupTokenFromGrammarString(String token) {
-	for (int i = 0; i \< tokenNames.length; i++)
-		if (tokenNames[i].equals(token))
-			return i;
-	throw new RuntimeException("can't dereference token: " + token);
+	return tokenLiteralMap.get(token);
 }
 static {
-   <precedences:prec(precl=it,level=i)>
+	for (int i = 0; i \< tokenNames.length; i++)
+		tokenLiteralMap.put(tokenNames[i], i);
+	<precedences:prec(precl=it,level=i)>
 }
 int nextp(int p) {
    int prevOpType = input.LA(-1);
@@ -30,13 +34,13 @@ prec(precl,level) ::= <<
 
 <precl:{p|
     <if(p.binary)>
-        prec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
+		prec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
     <endif>
     <if(p.unary)>
-        uprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
+		uprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
     <endif>
     <if(p.rightAssoc)>
-        assoc[lookupTokenFromGrammarString("<p.tokenText>")] = RIGHT;
+		assoc[lookupTokenFromGrammarString("<p.tokenText>")] = RIGHT;
     <else>
 		assoc[lookupTokenFromGrammarString("<p.tokenText>")] = LEFT;
 	<endif>
