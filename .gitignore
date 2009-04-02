@@ -5,3 +5,5 @@
 .project
 .settings
 .classpath
+ExpressionCrawler.java
+HaskellExpressions.g

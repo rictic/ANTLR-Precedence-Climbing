@@ -1,11 +1,5 @@
 gunit HaskellExpressions;
 
-sExpr:
-"1234" -> "1234"
-"True" -> "True"
-"False" -> "False"
-"f"     -> "f"
-
 expression:
 "1234" -> "1234"
 "-1234" -> (- 1234)

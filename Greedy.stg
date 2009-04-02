@@ -50,13 +50,14 @@ prec(precl,level) ::= <<
 
 
 
-exprRule(name,terminal,bops,uops,buildTree) ::= <<
+exprRule(name,terminals,bops,uops,buildTree) ::= <<
 <name>[int p]
-   :   <terminal>
+   :   <name>_terminals
        (   {prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>[nextp(p)]
 
        )*
-   |   <if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif> {int q=uprec[input.LA(-1)];} <name>[q]
+   <if(uops)>|   <if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif> {int q=uprec[input.LA(-1)];} <name>[q]<endif>
    ;
-
+<name>_terminals
+   :	<terminals;separator="|">;
 >>
