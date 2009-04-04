@@ -21,46 +21,43 @@ import antlr.RecognitionException;
 import antlr.TokenStreamException;
 
 public class ExpressionTransformer {
-  List<String> rulesToRemove = new ArrayList<String>();
-  TreeWizard wiz;
-  Grammar g;
-  int insertLocation = 0;
+  int membersLocation;
+  boolean hasMembersSection;
   TokenRewriteStream tokens;
   List<ExpressionRule> expressions;
+  
   public ExpressionTransformer(String grammarText) throws RecognitionException, TokenStreamException, org.antlr.runtime.RecognitionException {
     ANTLRv3Lexer lex = new ANTLRv3Lexer(new ANTLRStringStream(grammarText));
-    CommonTokenStream tokens = new CommonTokenStream(lex);
+    tokens = new TokenRewriteStream(lex);
     ANTLRv3Parser p = new ANTLRv3Parser(tokens);
     RuleReturnScope r = p.grammarDef();   
     CommonTree t = (CommonTree)r.getTree();
     System.err.println("tree: "+t.toStringTree());
-
     CommonTreeNodeStream nodes = new CommonTreeNodeStream(t);
     nodes.setTokenStream(tokens);
     ExpressionCrawler ref = new ExpressionCrawler(nodes);
+    
     ref.downup(t);
     expressions = ref.expressionRules;
-    
-//    this.g = new Grammar(grammarText);
-//    CharStream input = new ANTLRStringStream(grammarText);
-//    Lexer l = new ANTLRv3Lexer(input);
-//    tokens = new TokenRewriteStream(l);
+    membersLocation = ref.membersLocation;
+    hasMembersSection = ref.hasMembersSection;
   }
   
-  public void printGrammar(String name, boolean buildTree, PrintStream out) throws FileNotFoundException {
+  public void printGrammar(boolean buildTree, PrintStream out) throws FileNotFoundException {
+    //TODO: handle multiple expressions to rewrite
     if (expressions.size() == 0)
       throw new RuntimeException("expected an expression to rewrite, found none");
     ExpressionRule rule = expressions.get(0); 
     StringTemplateGroup stg = new StringTemplateGroup(new FileReader("Greedy.stg"));
+
     StringTemplate header = stg.getInstanceOf("header");
-    if (header == null) System.err.println("null!");
-    if (tokens == null) System.err.println("tokens!");
     header.setAttribute("precedences", rule.precidenceOpers);
-//     tokens.insertAfter(0, header.toString());
-//     out.println(header.toString());
-    StringTemplate ruleTemplate = stg.getInstanceOf("exprRule");
-    ruleTemplate.setAttribute("name",rule.name);
-    ruleTemplate.setAttribute("terminals", rule.terminals);
+
+    if (!hasMembersSection)
+      tokens.insertBefore(membersLocation, header.toString());
+    else
+      //TODO
+      throw new RuntimeException("can't handle an existing @members section in expression rewriting yet");
     
     List<String> binaryOps = new ArrayList<String>();
     List<String> unaryOps = new ArrayList<String>();
@@ -73,32 +70,28 @@ public class ExpressionTransformer {
           unaryOps.add(op.tokenText);
       }
     }
+    
+    StringTemplate ruleTemplate = stg.getInstanceOf("exprRule");
+    ruleTemplate.setAttribute("name",rule.name);
+    ruleTemplate.setAttribute("terminals", rule.terminals);
     ruleTemplate.setAttribute("bops", binaryOps);
     ruleTemplate.setAttribute("uops", unaryOps);
     ruleTemplate.setAttribute("buildTree", buildTree);
-//     tokens.insertAfter(insertLocation, rule.toString());
-//     System.out.println(tokens.toString());
     
-    System.out.println(header.toString());
-    System.out.println(ruleTemplate.toString());
+    System.err.println(rule.startIndex + " to " + rule.stopIndex);
+    
+    tokens.replace(rule.startIndex, rule.stopIndex, ruleTemplate.toString());
+    
+    out.println(tokens.toString());
   }
-  
-  public void removeRule(GrammarAST rule) {
-//    tokens.delete(rule.ruleStartTokenIndex, rule.ruleStopTokenIndex);
-  }
-  
   
   public static void main(String[] args) throws Exception {
     if (args.length != 1){
       System.err.println("usage: java ExpressionTransformer <filename>");
       System.exit(1);
     }
-    String filename = args[0];
-    
-    ExpressionTransformer et = new ExpressionTransformer(readFileAsString(filename));
-//    et.rewriteExpression("e");
-//    System.err.println(et.precedences.toString());
-    et.printGrammar(filename.subSequence(0, filename.indexOf('.')).toString(), true, System.out);
+    ExpressionTransformer et = new ExpressionTransformer(readFileAsString(args[0]));
+    et.printGrammar(true, System.out);
   }
   
   

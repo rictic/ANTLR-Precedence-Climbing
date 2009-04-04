@@ -1,9 +1,10 @@
 grammar HaskellExpressions;
 
+
 expressions : expression ('\n' expression)+ EOF;
 
 expression : e;
-e options {strategy=tokenGrab}
+e options {strategy=tokenGrab;}
   : e ('$'|'$!') e
   | e ('>>'|'>>=') e
   | e '||' /*<associativity=right>*/ e 

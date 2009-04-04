@@ -35,7 +35,7 @@ end
 file "HaskellExpressions.g" => "HaskellExpressions.ng" do |t|
   sh "javac ExpressionTransformer.java"
   sh "java ExpressionTransformer HaskellExpressions.ng > HaskellExpressions.g"
-  sh "cat HaskellExpressions.lexer >> HaskellExpressions.g"
+#   sh "cat HaskellExpressions.lexer >> HaskellExpressions.g"
 end
 
 def need_compile? source, product

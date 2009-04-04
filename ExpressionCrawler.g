@@ -9,31 +9,59 @@ options {
 
 @members {
   public ArrayList<ExpressionRule> expressionRules = new ArrayList<ExpressionRule>();
+  public boolean hasMembersSection = false;
+  public int membersLocation = 4;
 }
 
-topdown : rule ;  
+topdown : rule;  
 
+//Need to know where to put the members section
+grammarDef
+    :
+      ^(
+         (LEXER_GRAMMAR    
+          	|   PARSER_GRAMMAR
+          	|   TREE_GRAMMAR
+          	|		COMBINED_GRAMMAR
+          	)
+         id DOC_COMMENT? ( ^(OPTIONS .*))? ( ^(TOKENS .*))?  
+  		  //here's where a members section would go if there were to be one
+      	{ System.err.println("---members pinpointed");
+      	  membersLocation = ((CommonTree)input.LT(1)).getTokenStartIndex();}
+  		  attrScope* action* rule+
+  		) {System.err.println("grammar parsed");}
+    ;
+
+
+//Find expression rules and gather the necessary info about them
 rule
 scope {
   String name;
   List<String> terminals;
-}  : {$rule::terminals  = new ArrayList<String>();}
-  ^( RULE v=ID {$rule::name=$v.text;} (ARG .*)? ('returns' .*)?
-	  throwsSpec? opts=optionsSpec ('scope' .*)? ('@' ID ACTION)*
-	  {$opts.isExpression}?
+}
+@init {
+  int startIndex = ((CommonTree)input.LT(1)).getTokenStartIndex();
+  $rule::terminals  = new ArrayList<String>();
+}
+ : ^( RULE v=ID {$rule::name=$v.text;} (ARG .*)? ('returns' .*)?
+	  (^('throws' .*))? opts=optionsSpec ('scope' .*)? ('@' ID ACTION)*
 	  aL=altList
-	  exceptionGroup?
+	  (^('catch' .*))* (^('finally' .*))?
 	  EOR
 	)
-	  {System.err.println("should rewrite "+$rule::name);
-	   System.err.println($aL.precOpers);
-	   System.err.println($rule::terminals);
-	   expressionRules.add(new ExpressionRule($rule::name, $rule::terminals, $aL.precOpers));
-	   }
+	{ if ($opts.isExpression) {
+	     System.err.println("should rewrite "+$rule::name);
+  	   System.err.println($aL.precOpers);
+  	   System.err.println($rule::terminals);
+  	   CommonTree ob = (CommonTree)input.LT(1);
+  	   expressionRules.add(new ExpressionRule(((rule_scope)rule_stack.peek()).name, ((rule_scope)rule_stack.peek()).terminals, aL, startIndex, ((CommonTree)input.LT(1)).getTokenStartIndex()-1)); 
+	  }
+	}
    	;
 
 optionsSpec returns [boolean isExpression]
-	: {isExpression = false;} ^(OPTIONS (opt=option {if ($opt.isExpression) isExpression = true;})+)
+	: {isExpression = false;} 
+	  ^(OPTIONS (opt=option {if ($opt.isExpression) isExpression = true;})+)
 	;
 
 option returns [boolean isExpression]
@@ -91,19 +119,17 @@ op returns [Operator oper]
 }   :
 l=STRING_LITERAL | l=CHAR_LITERAL;
 
-throwsSpec
-	:	^('throws' ID+)
+
+
+
+attrScope
+	:	^('scope' id ACTION);
+
+/** Match stuff like @parser::members {int i;} */
+action
+	:	^('@' actionScopeName? id ACTION)
 	;
 
-exceptionGroup
-	:	( exceptionHandler )+ ( finallyClause )?
-	|	finallyClause
-    ;
+actionScopeName :	id;
 
-exceptionHandler
-    :    ^('catch' ARG_ACTION ACTION)
-    ;
-
-finallyClause
-    :    ^('finally' ACTION)
-    ;
+id	:	TOKEN_REF |	RULE_REF | ID;

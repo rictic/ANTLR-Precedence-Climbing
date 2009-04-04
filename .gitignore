@@ -1,7 +1,6 @@
 *.class
 *Parser.java
 *Lexer.java
-*.tokens
 .project
 .settings
 .classpath
