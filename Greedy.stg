@@ -2,8 +2,6 @@ group Greedy;
 
 header(precedences) ::= <<
 
-
-@members {
 public static final int LEFT = 1;
 public static final int RIGHT = 2;
 static int[] prec = new int[tokenNames.length];
@@ -23,7 +21,6 @@ int nextp(int p) {
    int prevOpType = input.LA(-1);
    if ( assoc[prevOpType]==LEFT ) return prec[prevOpType]+1;
    else return prec[prevOpType];
-}
 }
 >>
 

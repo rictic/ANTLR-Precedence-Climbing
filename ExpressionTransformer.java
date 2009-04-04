@@ -47,17 +47,22 @@ public class ExpressionTransformer {
     //TODO: handle multiple expressions to rewrite
     if (expressions.size() == 0)
       throw new RuntimeException("expected an expression to rewrite, found none");
-    ExpressionRule rule = expressions.get(0); 
+    ExpressionRule rule = expressions.get(0);
     StringTemplateGroup stg = new StringTemplateGroup(new FileReader("Greedy.stg"));
 
     StringTemplate header = stg.getInstanceOf("header");
     header.setAttribute("precedences", rule.precidenceOpers);
 
     if (!hasMembersSection)
-      tokens.insertBefore(membersLocation, header.toString());
-    else
-      //TODO
-      throw new RuntimeException("can't handle an existing @members section in expression rewriting yet");
+      tokens.insertBefore(membersLocation, "@members {" + header.toString() + "}");
+    else{
+      String membersText = tokens.get(membersLocation).getText();
+      //remove the closing bracket
+      membersText = membersText.substring(0,membersText.lastIndexOf('}'));
+      membersText += header.toString() + "}";
+      tokens.replace(membersLocation, membersText);
+    }
+      
     
     List<String> binaryOps = new ArrayList<String>();
     List<String> unaryOps = new ArrayList<String>();
@@ -91,7 +96,7 @@ public class ExpressionTransformer {
       System.exit(1);
     }
     ExpressionTransformer et = new ExpressionTransformer(readFileAsString(args[0]));
-    et.printGrammar(true, System.out);
+    et.printGrammar(true,System.out);
   }
   
   

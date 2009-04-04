@@ -6,3 +6,4 @@
 .classpath
 ExpressionCrawler.java
 HaskellExpressions.g
+*.dot

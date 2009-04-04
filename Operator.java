@@ -18,11 +18,13 @@ class Operator {
   public boolean isLeftAssoc() {
     return assoc == Associativity.Left;
   }
-  public Operator(int tokenType, String tokenText) {
-    this.tokenType = tokenType; this.assoc=Associativity.Left; this.tokenText = tokenText;
+  public Operator(int tokenType, String tokenText, Associativity assoc) {
+    this.tokenType = tokenType; this.assoc=assoc; this.tokenText = tokenText;
   }
   public String toString() {
-    String result = kind == Kind.Binary ? "B " : "U ";
+    String result = kind == Kind.Binary ? "B" : kind == Kind.Unary ? "U" : "T";
+    result += assoc == Associativity.Right ? "R " : "L ";
     return result + '"' + tokenText + '"'; 
+    
   }
 }

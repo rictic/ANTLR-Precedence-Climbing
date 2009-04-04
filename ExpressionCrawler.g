@@ -10,10 +10,10 @@ options {
 @members {
   public ArrayList<ExpressionRule> expressionRules = new ArrayList<ExpressionRule>();
   public boolean hasMembersSection = false;
-  public int membersLocation = 4;
+  public int membersLocation = 0;
 }
 
-topdown : rule;  
+topdown : rule | grammarDef | action;
 
 //Need to know where to put the members section
 grammarDef
@@ -26,10 +26,9 @@ grammarDef
           	)
          id DOC_COMMENT? ( ^(OPTIONS .*))? ( ^(TOKENS .*))?  
   		  //here's where a members section would go if there were to be one
-      	{ System.err.println("---members pinpointed");
-      	  membersLocation = ((CommonTree)input.LT(1)).getTokenStartIndex();}
-  		  attrScope* action* rule+
-  		) {System.err.println("grammar parsed");}
+      	{ membersLocation = ((CommonTree)input.LT(1)).getTokenStartIndex();}
+  		  attrScope*
+  		)
     ;
 
 
@@ -50,7 +49,7 @@ scope {
 	  EOR
 	)
 	{ if ($opts.isExpression) {
-	     System.err.println("should rewrite "+$rule::name);
+	     System.err.println("rewrite "+$rule::name);
   	   System.err.println($aL.precOpers);
   	   System.err.println($rule::terminals);
   	   CommonTree ob = (CommonTree)input.LT(1);
@@ -111,15 +110,32 @@ ops returns [List<Operator> opers]
   $opers = new ArrayList<Operator>();
 }
     : o=op {$opers.add($o.oper);}
-    | ^(BLOCK (^(ALT o=op{$opers.add($o.oper);} EOA))+ EOB)
+    | ^(BLOCK 
+        (^(ALT o=op{$opers.add($o.oper);} EOA))+ 
+      EOB)
     ;
 op returns [Operator oper]
+@init {
+  Operator.Associativity assoc = Operator.Associativity.Left;
+}
 @after {
-  $oper = new Operator(input.LA(-1), $l.text);
-}   :
-l=STRING_LITERAL | l=CHAR_LITERAL;
+  $oper = new Operator(input.LA(-1), $l.text, assoc);
+}   : l=STRING_LITERAL | l=CHAR_LITERAL
+    | ^((l=STRING_LITERAL | l=CHAR_LITERAL) tops=tokenOptions {assoc = $tops.assoc;});
 
+tokenOptions returns [Operator.Associativity assoc]
+@init {$assoc = Operator.Associativity.Left;}
+  : ^(OPTIONS 
+      (o=tokenOption {if ($o.right == true) $assoc = Operator.Associativity.Right;})+
+    );
 
+tokenOption returns [boolean right]
+@init {$right = false;}
+  : ^('=' k=id v=optionValue) {
+              if (  $k.text.equals("associativity")
+                  &&$v.text.equals("right"))
+                $right = true;}
+  ;
 
 
 attrScope
@@ -127,7 +143,11 @@ attrScope
 
 /** Match stuff like @parser::members {int i;} */
 action
-	:	^('@' actionScopeName? id ACTION)
+	:	^('@' actionScopeName? kind=id {if ($kind.text.equals("members")){
+	    membersLocation = ((CommonTree)input.LT(1)).getTokenStartIndex();
+	    hasMembersSection = true;
+	    System.err.println("-=-=-=-found members-=-=-=-=-=");
+	}} ACTION) 
 	;
 
 actionScopeName :	id;

@@ -1,21 +1,25 @@
 grammar HaskellExpressions;
 
+@members {
+  public int example;
+}
 
 expressions : expression ('\n' expression)+ EOF;
 
 expression : e;
+//precedence
 e options {strategy=tokenGrab;}
   : e ('$'|'$!') e
   | e ('>>'|'>>=') e
-  | e '||' /*<associativity=right>*/ e 
-  | e '&&' /*<associativity=right>*/ e
+  | e '||' <associativity=right> e 
+  | e '&&' <associativity=right> e
   | e ('=='|'/='|'<'|'<='|'>='|'>') e
-  | e ':' /*<associativity=right>*/ e
-  | '-' e
+  | e ':' <associativity=right> e
   | e ('+'|'-') e
   | e ('*'|'/') e
-  | e ('^'|'^^'|'**') e
-  | e '.' /*<associativity=right>*/ e
+  | '-' e
+  | e ('^' <associativity=right>|'^^' <associativity=right>|'**' <associativity=right>) e
+  | e '.' <associativity=right> e
   | NUMBER
   | BOOL
   | ID;
