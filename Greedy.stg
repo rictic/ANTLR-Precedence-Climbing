@@ -1,42 +1,47 @@
 group Greedy;
 
-header(precedences) ::= <<
-
+staticHeader() ::= <<
 public static final int LEFT = 1;
 public static final int RIGHT = 2;
-static int[] prec = new int[tokenNames.length];
-static int[] uprec = new int[tokenNames.length];
-static int[] postprec = new int[tokenNames.length];
-static int[] assoc = new int[tokenNames.length];
 static java.util.Map\<String, Integer\> tokenLiteralMap = new java.util.HashMap\<String, Integer\>();
-static int lookupTokenFromGrammarString(String token) {
-	return tokenLiteralMap.get(token);
-}
 static {
 	for (int i = 0; i \< tokenNames.length; i++)
 		tokenLiteralMap.put(tokenNames[i], i);
-	<precedences:prec(precl=it,level=i)>
 }
-int nextp(int p) {
-   int prevOpType = input.LA(-1);
-   if ( assoc[prevOpType]==LEFT ) return prec[prevOpType]+1;
-   else return prec[prevOpType];
+static int lookupTokenFromGrammarString(String token) {
+	return tokenLiteralMap.get(token);
 }
 >>
 
-prec(precl,level) ::= <<
+header(name, precedences) ::= <<
+
+static int[] <name>_prec = new int[tokenNames.length];
+static int[] <name>_uprec = new int[tokenNames.length];
+static int[] <name>_postprec = new int[tokenNames.length];
+static int[] <name>_assoc = new int[tokenNames.length];
+static {
+	<precedences:prec(precl=it,level=i,name=name)>
+}
+int <name>_nextp(int p) {
+   int prevOpType = input.LA(-1);
+   if ( <name>_assoc[prevOpType]==LEFT ) return <name>_prec[prevOpType]+1;
+   else return <name>_prec[prevOpType];
+}
+>>
+
+prec(precl,level,name) ::= <<
 
 <precl:{p|
     <if(p.binary)>
-		prec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
+		<name>_prec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
     <endif>
     <if(p.unary)>
-		uprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
+		<name>_uprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
     <endif>
     <if(p.rightAssoc)>
-		assoc[lookupTokenFromGrammarString("<p.tokenText>")] = RIGHT;
+		<name>_assoc[lookupTokenFromGrammarString("<p.tokenText>")] = RIGHT;
     <else>
-		assoc[lookupTokenFromGrammarString("<p.tokenText>")] = LEFT;
+		<name>_assoc[lookupTokenFromGrammarString("<p.tokenText>")] = LEFT;
 	<endif>
 }>
 >>
@@ -49,10 +54,10 @@ exprRule(name,terminals,bops,uops,buildTree) ::= <<
 <name> : <name>_expr[0] ;
 <name>_expr[int p]
    :   <name>_terminals
-       (   {prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[nextp(p)]
+       (   {<name>_prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[<name>_nextp(p)]
 
        )*
-   <if(uops)>|   <if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif> {int q=uprec[input.LA(-1)];} <name>_expr[q]<endif>
+   <if(uops)>|   <if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif> {int q=<name>_uprec[input.LA(-1)];} <name>_expr[q]<endif>
    ;
 <name>_terminals
    :	<terminals;separator="|">;

@@ -44,50 +44,54 @@ public class ExpressionTransformer {
   }
   
   public void printGrammar(boolean buildTree, PrintStream out) throws FileNotFoundException {
-    //TODO: handle multiple expressions to rewrite
     if (expressions.size() == 0)
-      throw new RuntimeException("expected an expression to rewrite, found none");
-    ExpressionRule rule = expressions.get(0);
+      out.print(tokens);
+    
     StringTemplateGroup stg = new StringTemplateGroup(new FileReader("Greedy.stg"));
-
-    StringTemplate header = stg.getInstanceOf("header");
-    header.setAttribute("precedences", rule.precidenceOpers);
-
+    
+    String membersText;
     if (!hasMembersSection)
-      tokens.insertBefore(membersLocation, "@members {" + header.toString() + "}");
-    else{
-      String membersText = tokens.get(membersLocation).getText();
+       membersText = "@members {";
+    else {
+      membersText = tokens.get(membersLocation).getText();
       //remove the closing bracket
       membersText = membersText.substring(0,membersText.lastIndexOf('}'));
-      membersText += header.toString() + "}";
-      tokens.replace(membersLocation, membersText);
+      tokens.delete(membersLocation);
     }
+    StringTemplate staticHeader = stg.getInstanceOf("staticHeader");
+    membersText += staticHeader;
+    
+    for (ExpressionRule rule: expressions) {
+      StringTemplate header = stg.getInstanceOf("header");
+      header.setAttribute("precedences", rule.precidenceOpers);
+      header.setAttribute("name", rule.name);
+      membersText += header;
+        
       
-    
-    List<String> binaryOps = new ArrayList<String>();
-    List<String> unaryOps = new ArrayList<String>();
-    for (List<Operator> ops : rule.precidenceOpers) {
-      if (ops == null) continue;
-      for (Operator op : ops) {
-        if (op.kind == Operator.Kind.Binary)
-          binaryOps.add(op.tokenText);
-        else if (op.kind == Operator.Kind.Unary)
-          unaryOps.add(op.tokenText);
+      List<String> binaryOps = new ArrayList<String>();
+      List<String> unaryOps = new ArrayList<String>();
+      for (List<Operator> ops : rule.precidenceOpers) {
+        if (ops == null) continue;
+        for (Operator op : ops) {
+          if (op.kind == Operator.Kind.Binary)
+            binaryOps.add(op.tokenText);
+          else if (op.kind == Operator.Kind.Unary)
+            unaryOps.add(op.tokenText);
+        }
       }
+      
+      StringTemplate ruleTemplate = stg.getInstanceOf("exprRule");
+      ruleTemplate.setAttribute("name",rule.name);
+      ruleTemplate.setAttribute("terminals", rule.terminals);
+      ruleTemplate.setAttribute("bops", binaryOps);
+      ruleTemplate.setAttribute("uops", unaryOps);
+      ruleTemplate.setAttribute("buildTree", buildTree);
+      
+      tokens.replace(rule.startIndex, rule.stopIndex, ruleTemplate.toString());
     }
-    
-    StringTemplate ruleTemplate = stg.getInstanceOf("exprRule");
-    ruleTemplate.setAttribute("name",rule.name);
-    ruleTemplate.setAttribute("terminals", rule.terminals);
-    ruleTemplate.setAttribute("bops", binaryOps);
-    ruleTemplate.setAttribute("uops", unaryOps);
-    ruleTemplate.setAttribute("buildTree", buildTree);
-    
-    System.err.println(rule.startIndex + " to " + rule.stopIndex);
-    
-    tokens.replace(rule.startIndex, rule.stopIndex, ruleTemplate.toString());
-    
-    out.println(tokens.toString());
+    membersText += "}";
+    tokens.insertBefore(membersLocation, membersText);
+    out.print(tokens);
   }
   
   public static void main(String[] args) throws Exception {

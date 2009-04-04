@@ -49,9 +49,6 @@ scope {
 	  EOR
 	)
 	{ if ($opts.isExpression) {
-	     System.err.println("rewrite "+$rule::name);
-  	   System.err.println($aL.precOpers);
-  	   System.err.println($rule::terminals);
   	   CommonTree ob = (CommonTree)input.LT(1);
   	   expressionRules.add(new ExpressionRule(((rule_scope)rule_stack.peek()).name, ((rule_scope)rule_stack.peek()).terminals, aL, startIndex, ((CommonTree)input.LT(1)).getTokenStartIndex()-1)); 
 	  }
@@ -146,7 +143,6 @@ action
 	:	^('@' actionScopeName? kind=id {if ($kind.text.equals("members")){
 	    membersLocation = ((CommonTree)input.LT(1)).getTokenStartIndex();
 	    hasMembersSection = true;
-	    System.err.println("-=-=-=-found members-=-=-=-=-=");
 	}} ACTION) 
 	;
 
