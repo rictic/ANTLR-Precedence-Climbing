@@ -23,12 +23,19 @@ end
 
 GRAMMARS = FileList['*.g']
 GRAMMARS.each do |grammar|
-  /(.*).g/ === grammar
+  /(.*).g$/ === grammar
   name = $1
   ["#{name}.java", "#{name}Parser.java", "#{name}Lexer.java"].each do |generated_source|
     file generated_source => grammar do |t|
       sh "java org.antlr.Tool #{grammar}"
     end
+  end
+end
+
+PREGRAMMARS = FileList["*.ng"]
+PREGRAMMARS.each do |pregrammar|
+  file pregrammar.ext("g") => pregrammar do
+    sh "java ExpressionTransformer #{pregrammar} > #{pregrammar.ext('g')}"
   end
 end
 
