@@ -44,8 +44,11 @@ public class ExpressionTransformer {
   }
   
   public void printGrammar(boolean buildTree, PrintStream out) throws FileNotFoundException {
-    if (expressions.size() == 0)
+    if (expressions.size() == 0){
       out.print(tokens);
+      return;
+    }
+      
     
     StringTemplateGroup stg = new StringTemplateGroup(new FileReader("Greedy.stg"));
     
