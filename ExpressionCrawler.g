@@ -39,18 +39,24 @@ scope {
   List<String> terminals;
 }
 @init {
-  int startIndex = ((CommonTree)input.LT(1)).getTokenStartIndex();
+  CommonTree ruleTree = (CommonTree)input.LT(1);
+  int startIndex = ruleTree.getTokenStartIndex();
   $rule::terminals  = new ArrayList<String>();
+
 }
  : ^( RULE v=ID {$rule::name=$v.text;} (ARG .*)? ('returns' .*)?
-	  (^('throws' .*))? opts=optionsSpec ('scope' .*)? ('@' ID ACTION)*
+	  (^('throws' .*))? opts=optionsSpec 
+	  { if ($opts.isExpression) System.err.println(ruleTree.toStringTree());}
+	  ('scope' .*)? ('@' ID ACTION)*
 	  aL=altList
 	  (^('catch' .*))* (^('finally' .*))?
 	  EOR
 	)
 	{ if ($opts.isExpression) {
-  	   CommonTree ob = (CommonTree)input.LT(1);
-  	   expressionRules.add(new ExpressionRule(((rule_scope)rule_stack.peek()).name, ((rule_scope)rule_stack.peek()).terminals, aL, startIndex, ((CommonTree)input.LT(1)).getTokenStartIndex()-1)); 
+        rule_scope rs = (rule_scope)rule_stack.peek();
+        System.err.println(aL);
+        System.err.println(rs.terminals);
+        expressionRules.add(new ExpressionRule(rs.name, rs.terminals, aL, startIndex, ((CommonTree)input.LT(1)).getTokenStartIndex()-1)); 
 	  }
 	}
    	;
@@ -100,7 +106,7 @@ alternative returns [List<Operator> opers]
     |   ^(ALT .* )
     ;
 
-terminals : ((l=STRING_LITERAL | l=CHARLITERAL | l=TOKEN_REF){$rule::terminals.add($l.text);})+ ;
+terminals : ((l=STRING_LITERAL | l=CHARLITERAL | l=TOKEN_REF | l=RULE_REF){$rule::terminals.add($l.text);})+ ;
 
 ops returns [List<Operator> opers]
 @init {
@@ -117,8 +123,10 @@ op returns [Operator oper]
 }
 @after {
   $oper = new Operator(input.LA(-1), $l.text, assoc);
-}   : l=STRING_LITERAL | l=CHAR_LITERAL
-    | ^((l=STRING_LITERAL | l=CHAR_LITERAL) tops=tokenOptions {assoc = $tops.assoc;});
+}   : l=opVal
+    | ^(l=opVal tops=tokenOptions {assoc = $tops.assoc;});
+
+opVal : STRING_LITERAL | CHAR_LITERAL | TOKEN_REF;
 
 tokenOptions returns [Operator.Associativity assoc]
 @init {$assoc = Operator.Associativity.Left;}
@@ -140,10 +148,15 @@ attrScope
 
 /** Match stuff like @parser::members {int i;} */
 action
-	:	^('@' actionScopeName? kind=id {if ($kind.text.equals("members")){
-	    membersLocation = ((CommonTree)input.LT(1)).getTokenStartIndex();
-	    hasMembersSection = true;
-	}} ACTION) 
+	:	^('@' actionScopeName? kind=id {
+	    String actionScope = $actionScopeName.text;
+  	  if (actionScope == null || !actionScope.equals("lexer")){
+  	    if ($kind.text.equals("members")){
+    	    membersLocation = ((CommonTree)input.LT(1)).getTokenStartIndex();
+    	    hasMembersSection = true;
+  	    }
+  	  }} 
+	  ACTION) 
 	;
 
 actionScopeName :	id;

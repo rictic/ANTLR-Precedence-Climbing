@@ -32,7 +32,7 @@ public class ExpressionTransformer {
     ANTLRv3Parser p = new ANTLRv3Parser(tokens);
     RuleReturnScope r = p.grammarDef();   
     CommonTree t = (CommonTree)r.getTree();
-    System.err.println("tree: "+t.toStringTree());
+//    System.err.println("tree: "+t.toStringTree());
     CommonTreeNodeStream nodes = new CommonTreeNodeStream(t);
     nodes.setTokenStream(tokens);
     ExpressionCrawler ref = new ExpressionCrawler(nodes);

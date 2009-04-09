@@ -35,14 +35,9 @@ end
 PREGRAMMARS = FileList["*.ng"]
 PREGRAMMARS.each do |pregrammar|
   file pregrammar.ext("g") => pregrammar do
+    sh "javac ExpressionTransformer.java"
     sh "java ExpressionTransformer #{pregrammar} > #{pregrammar.ext('g')}"
   end
-end
-
-file "HaskellExpressions.g" => "HaskellExpressions.ng" do |t|
-  sh "javac ExpressionTransformer.java"
-  sh "java ExpressionTransformer HaskellExpressions.ng > HaskellExpressions.g"
-#   sh "cat HaskellExpressions.lexer >> HaskellExpressions.g"
 end
 
 def need_compile? source, product
