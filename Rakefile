@@ -8,7 +8,26 @@ end
 
 task :test => :test_grammar
 
-task :test_grammar => [:compile] do
+def compileJava
+  sources = FileList["*.java"].map {|f| [f, f.ext(".class")]}.collect {|(java, jclass)|
+    java if need_compile?(java, jclass)
+  }.compact
+  sh "javac #{sources.join ' '}" unless sources.empty?
+end
+
+task :test_grammar do #=> [:compile] do
+  compileJava
+  FileList["*.ng"].each do |f|
+    sh "java ExpressionTransformer #{f} > #{f.ext('g')}" if need_compile?(f, f.ext('g'))
+  end
+  
+  FileList['*.g'].each do |grammar|
+    /(.*).g$/ === grammar
+    name = $1
+    sh "java org.antlr.Tool #{grammar}" if need_compile?(grammar, grammar.ext("java"), "#{name}Parser.java", "#{name}Lexer.java")
+  end
+  compileJava
+  
   FileList["*.gunit"].each do |file|
     sh "java org.antlr.gunit.Interp #{file}"
   end
@@ -40,6 +59,13 @@ PREGRAMMARS.each do |pregrammar|
   end
 end
 
-def need_compile? source, product
-  !(File.exists?(product) && File.mtime(source) <= File.mtime(product))
+def need_compile? source, *products
+  products = products.delete_if {|product| !File.exists?(product) }
+  return true if products.empty?
+  products.each do |product|
+    if File.mtime(source) >= File.mtime(product)
+      return true 
+    end
+  end
+  return false
 end
