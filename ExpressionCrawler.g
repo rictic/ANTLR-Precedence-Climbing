@@ -120,11 +120,14 @@ ops returns [List<Operator> opers]
 op returns [Operator oper]
 @init {
   Operator.Associativity assoc = Operator.Associativity.Left;
+  String opText = null;
 }
 @after {
-  $oper = new Operator(input.LA(-1), $l.text, assoc);
-}   : l=opVal
-    | ^(l=opVal tops=tokenOptions {assoc = $tops.assoc;});
+  System.err.println("-!- " + opText);
+  $oper = new Operator(input.LA(-1), opText, assoc);
+}   : l=opVal {opText = $l.text;}
+    | ^(l=opVal tops=tokenOptions 
+        {assoc = $tops.assoc; opText = $l.text.substring(0,$l.text.lastIndexOf($tops.text)-1);});
 
 opVal : STRING_LITERAL | CHAR_LITERAL | TOKEN_REF;
 

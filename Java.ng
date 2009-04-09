@@ -611,7 +611,7 @@ genericTypeArgument
     ;
     
 genericWildcardBoundType
-    :   (EXTENDS^ | SUPER^) type
+    :   (EXTENDS | SUPER)^ type
     ;
 
 genericTypeArgumentListSimplified
@@ -833,29 +833,30 @@ expressionList
     ;
 
 expression
-    :   expr
-        ->  ^(EXPR expr)
+    :   assignmentExpression
+        ->  ^(EXPR assignmentExpression)
+    ;
+
+assignmentExpression
+    :   conditionalExpression 
+        (   (   ASSIGN^
+            |   PLUS_ASSIGN^
+            |   MINUS_ASSIGN^
+            |   STAR_ASSIGN^
+            |   DIV_ASSIGN^
+            |   AND_ASSIGN^
+            |   OR_ASSIGN^
+            |   XOR_ASSIGN^
+            |   MOD_ASSIGN^
+            |   SHIFT_LEFT_ASSIGN^
+            |   SHIFT_RIGHT_ASSIGN^
+            |   BIT_SHIFT_RIGHT_ASSIGN^
+        ) 
+        assignmentExpression)?
     ;
     
-//Just like expression, but doesn't wrap in ^(EXPR
-expr options {strategy=tokenGrab;}
-    :   expr (   ASSIGN
-          |   PLUS_ASSIGN
-          |   MINUS_ASSIGN
-          |   STAR_ASSIGN
-          |   DIV_ASSIGN
-          |   AND_ASSIGN
-          |   OR_ASSIGN
-          |   XOR_ASSIGN
-          |   MOD_ASSIGN
-          |   SHIFT_LEFT_ASSIGN
-          |   SHIFT_RIGHT_ASSIGN
-          |   BIT_SHIFT_RIGHT_ASSIGN )
-          expr
-      | conditionalExpression;
-    
 conditionalExpression
-    :   logicalOrExpression (QUESTION^ expr COLON! conditionalExpression)?
+    :   logicalOrExpression (QUESTION^ assignmentExpression COLON! conditionalExpression)?
     ;
 
 logicalOrExpression
