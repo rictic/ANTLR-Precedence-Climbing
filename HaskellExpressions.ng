@@ -1,8 +1,5 @@
 grammar HaskellExpressions;
 
-@members {
-  public int example;
-}
 
 expressions : expression ('\n' expression)+ EOF;
 
@@ -16,6 +13,7 @@ e options {strategy=tokenGrab;}
   | e ('=='|'/='|'<'|'<='|'>='|'>') e
   | e ':' <associativity=right> e
   | e ('+'|'-') e
+  | e '?' e ':' e
   | e ('*'|'/') e
   | '-' e
   | e ('^' <associativity=right>|'^^' <associativity=right>|'**' <associativity=right>) e
