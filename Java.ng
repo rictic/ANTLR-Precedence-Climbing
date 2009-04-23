@@ -611,7 +611,7 @@ genericTypeArgument
     ;
     
 genericWildcardBoundType
-    :   (EXTENDS | SUPER)^ type
+    :   EXTENDS^ | SUPER^ type
     ;
 
 genericTypeArgumentListSimplified
