@@ -36,7 +36,6 @@ public class ExpressionTransformer {
     CommonTreeNodeStream nodes = new CommonTreeNodeStream(t);
     nodes.setTokenStream(tokens);
     ExpressionCrawler ref = new ExpressionCrawler(nodes);
-    
     ref.downup(t);
     expressions = ref.expressionRules;
     membersLocation = ref.membersLocation;
@@ -69,10 +68,10 @@ public class ExpressionTransformer {
       header.setAttribute("precedences", rule.precidenceOpers);
       header.setAttribute("name", rule.name);
       membersText += header;
-        
-      
+         
       List<String> binaryOps = new ArrayList<String>();
       List<String> unaryOps = new ArrayList<String>();
+      List<String> ternaryOps = new ArrayList<String>();
       for (List<Operator> ops : rule.precidenceOpers) {
         if (ops == null) continue;
         for (Operator op : ops) {
@@ -80,6 +79,8 @@ public class ExpressionTransformer {
             binaryOps.add(op.tokenText);
           else if (op.kind == Operator.Kind.Unary)
             unaryOps.add(op.tokenText);
+          else if (op.kind == Operator.Kind.TernaryPair)
+            ternaryOps.add(op.tokenText);
         }
       }
       
@@ -88,6 +89,7 @@ public class ExpressionTransformer {
       ruleTemplate.setAttribute("terminals", rule.terminals);
       ruleTemplate.setAttribute("bops", binaryOps);
       ruleTemplate.setAttribute("uops", unaryOps);
+      ruleTemplate.setAttribute("tops", ternaryOps);
       ruleTemplate.setAttribute("buildTree", buildTree);
       
       tokens.replace(rule.startIndex, rule.stopIndex, ruleTemplate.toString());

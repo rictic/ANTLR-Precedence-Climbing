@@ -6,11 +6,16 @@ class Operator {
   public String tokenText;
   public enum Associativity {Left, Right};
   public Associativity assoc;
+  public Operator ternary = null;
+  public boolean ternaryAfter;
   public boolean isBinary() {
     return kind == Kind.Binary;
   }
   public boolean isUnary() {
     return kind == Kind.Unary;
+  }
+  public boolean isTernary() {
+    return kind == Kind.TernaryPair;
   }
   public boolean isRightAssoc() {
     return assoc == Associativity.Right;
@@ -24,7 +29,10 @@ class Operator {
   public String toString() {
     String result = kind == Kind.Binary ? "B" : kind == Kind.Unary ? "U" : "T";
     result += assoc == Associativity.Right ? "R " : "L ";
-    return result + '"' + tokenText + '"'; 
+    result += '"' + tokenText + '"';
+    if (ternary != null)
+      result += " (" + ternary.toString() + ")";
+    return result; 
     
   }
 }
