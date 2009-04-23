@@ -16,7 +16,7 @@ def compileJava
 end
 
 task :test_grammar do #=> [:compile] do
-  compileJava
+  sh "javac ExpressionTransformer.java" if need_compile?("ExpressionTransformer.java", "ExpressionTransformer.class")
   FileList["*.ng"].each do |f|
     sh "java ExpressionTransformer #{f} > #{f.ext('g')}" if need_compile?(f, f.ext('g'))
   end
