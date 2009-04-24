@@ -10,21 +10,22 @@ task :test => :test_grammar
 
 def compileJava
   sources = FileList["*.java"].map {|f| [f, f.ext(".class")]}.collect {|(java, jclass)|
-    java if need_compile?(java, jclass)
+    java if need_compile?([java], jclass)
   }.compact
   sh "javac #{sources.join ' '}" unless sources.empty?
 end
 
 task :test_grammar do #=> [:compile] do
-  sh "javac ExpressionTransformer.java" if need_compile?("ExpressionTransformer.java", "ExpressionTransformer.class")
+  sh "java org.antlr.Tool ExpressionCrawler.g" if need_compile?(["ExpressionCrawler.g"], "ExpressionCrawler.java")
+  sh "javac ExpressionTransformer.java" if need_compile?(["ExpressionTransformer.java"], "ExpressionTransformer.class")
   FileList["*.ng"].each do |f|
-    sh "java ExpressionTransformer #{f} > #{f.ext('g')}" if need_compile?(f, f.ext('g'))
+    sh "java ExpressionTransformer #{f} > #{f.ext('g')}" if need_compile?([f,"Greedy.stg"], f.ext('g'))
   end
   
   FileList['*.g'].each do |grammar|
     /(.*).g$/ === grammar
     name = $1
-    sh "java org.antlr.Tool #{grammar}" if need_compile?(grammar, grammar.ext("java"), "#{name}Parser.java", "#{name}Lexer.java")
+    sh "java org.antlr.Tool #{grammar}" if need_compile?([grammar], grammar.ext("java"), "#{name}Parser.java", "#{name}Lexer.java")
   end
   compileJava
   
@@ -33,9 +34,15 @@ task :test_grammar do #=> [:compile] do
   end
 end
 
+task :clean do
+  sh "rm -f *.class"
+  sh "rm -f ExpressionParser.java ExpressionLexer.java HaskellExpressions.g Java.g ExpressionCrawler.java ExpressionCrawler.tokens"
+  sh "rm -f Java.tokens JavaLexer.java JavaParser.java"
+end
+
 task :compile => FileList["*.java"] do
   sources = FileList["*.java"].map {|f| [f, f.ext(".class")]}.collect {|(java, jclass)|
-    java if need_compile?(java, jclass)
+    java if need_compile?([java], jclass)
   }.compact
   sh "javac #{sources.join ' '}" unless sources.empty?
 end
@@ -59,11 +66,12 @@ PREGRAMMARS.each do |pregrammar|
   end
 end
 
-def need_compile? source, *products
+def need_compile? sources, *products
   products = products.delete_if {|product| !File.exists?(product) }
   return true if products.empty?
+  source_time = sources.map{|f| File.mtime(f)}.max
   products.each do |product|
-    if File.mtime(source) >= File.mtime(product)
+    if source_time >= File.mtime(product)
       return true 
     end
   end
