@@ -7,7 +7,9 @@
 ExpressionCrawler.java
 HaskellExpressions.g
 Java.g
-Java.tokens
 *.dot
 
+Java.tokens
+ExpressionCrawler.tokens
+HaskellExpressions.tokens
 
