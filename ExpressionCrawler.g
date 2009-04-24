@@ -102,6 +102,16 @@ alternative returns [List<Operator> opers]
                                         for (Operator op : $opers)
                                           op.kind = Operator.Kind.Unary;
                                     }}
+    |   ^(ALT p=RULE_REF q=op t=RULE_REF c=op f=RULE_REF? EOA)
+                      {if (  $p.text.equals($rule::name)
+                           &&$t.text.equals($rule::name)
+                           &&($f.text == null || $f.text.equals($rule::name))) {
+                          opers = new ArrayList<Operator>();
+                          $q.oper.ternary = $c.oper;
+                          $q.oper.kind = Operator.Kind.TernaryPair;
+                          opers.add($q.oper);
+                       }
+                      }
     |   ^(ALT terminals EOA)
     |   ^(ALT .* )
     ;
