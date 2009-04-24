@@ -1,6 +1,6 @@
 gunit Java;
 
-conditionalExpression:
+assignmentExpression:
 "1234" -> "1234"
 "-1234" -> (UNARY_MINUS 1234)
 "1+1" -> (+ 1 1)

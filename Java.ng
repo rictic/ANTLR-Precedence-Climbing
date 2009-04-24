@@ -837,22 +837,23 @@ expression
         ->  ^(EXPR assignmentExpression)
     ;
 
-assignmentExpression
-    :   conditionalExpression 
-        (   (   ASSIGN^
-            |   PLUS_ASSIGN^
-            |   MINUS_ASSIGN^
-            |   STAR_ASSIGN^
-            |   DIV_ASSIGN^
-            |   AND_ASSIGN^
-            |   OR_ASSIGN^
-            |   XOR_ASSIGN^
-            |   MOD_ASSIGN^
-            |   SHIFT_LEFT_ASSIGN^
-            |   SHIFT_RIGHT_ASSIGN^
-            |   BIT_SHIFT_RIGHT_ASSIGN^
+assignmentExpression options {strategy=tokenGrab;}
+    :   assignmentExpression
+        (   ASSIGN
+            |   PLUS_ASSIGN
+            |   MINUS_ASSIGN
+            |   STAR_ASSIGN
+            |   DIV_ASSIGN
+            |   AND_ASSIGN
+            |   OR_ASSIGN
+            |   XOR_ASSIGN
+            |   MOD_ASSIGN
+            |   SHIFT_LEFT_ASSIGN
+            |   SHIFT_RIGHT_ASSIGN
+            |   BIT_SHIFT_RIGHT_ASSIGN
         ) 
-        assignmentExpression)?
+        assignmentExpression
+    |   conditionalExpression
     ;
     
 conditionalExpression
