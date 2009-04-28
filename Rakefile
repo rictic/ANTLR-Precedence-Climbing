@@ -18,8 +18,9 @@ end
 task :test_grammar do #=> [:compile] do
   sh "java org.antlr.Tool ExpressionCrawler.g" if need_compile?(["ExpressionCrawler.g"], "ExpressionCrawler.java")
   sh "javac ExpressionTransformer.java" if need_compile?(["ExpressionTransformer.java"], "ExpressionTransformer.class")
-  FileList["*.ng"].each do |f|
-    sh "java ExpressionTransformer #{f} > #{f.ext('g')}" if need_compile?([f,"Greedy.stg"], f.ext('g'))
+  ["HaskellExpressions.ng"].each do |f|
+#  FileList["*.ng"].each do |f|
+    sh "java ExpressionTransformer #{f} > #{f.ext('g')}" if need_compile?([f,"Greedy.stg", "ExpressionTransformer.class"], f.ext('g'))
   end
   
   FileList['*.g'].each do |grammar|
@@ -29,7 +30,8 @@ task :test_grammar do #=> [:compile] do
   end
   compileJava
   
-  FileList["*.gunit"].each do |file|
+  #FileList["*.gunit"].each do |file|
+  ["HaskellExpressions.gunit"].each do |file|
     sh "java org.antlr.gunit.Interp #{file}"
   end
 end
