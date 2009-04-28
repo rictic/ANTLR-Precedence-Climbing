@@ -16,6 +16,7 @@ expression:
 "f.g$h" -> ($ (. f g) h)
 //not actually haskell, but..
 "1==1?f!g" -> (? (== 1 1) f g)
+"f[1]" -> ([ f 1)
 
 g:
 "abc" -> "abc"

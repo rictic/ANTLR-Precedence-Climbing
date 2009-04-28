@@ -109,6 +109,7 @@ alternative returns [List<Operator> opers]
                           opers = new ArrayList<Operator>();
                           $q.oper.ternary = $c.oper;
                           $q.oper.kind = Operator.Kind.TernaryPair;
+                          $q.oper.ternaryAfter = $f.text != null;
                           opers.add($q.oper);
                        }
                       }

@@ -59,7 +59,7 @@ exprRule(name,terminals,bops,uops,tops,buildTree) ::= <<
    :   <name>_terminals
        ( options {backtrack=false;}: //to prevent our predicate from being hoisted
 		{<name>_prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[<name>_nextp(p)]
-	     <if(first(tops))>| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree)> <endif>
+	     <if(first(tops))>| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree);separator="|"> <endif>
        )*
    <if(uops)>|   <if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif> {int q=<name>_uprec[input.LA(-1)];} <name>_expr[q]<endif>
    ;
@@ -70,5 +70,5 @@ exprRule(name,terminals,bops,uops,tops,buildTree) ::= <<
 
 ternaryOp(op, ruleName, buildTree) ::= <<
 {<name>_tprec[input.LA(1)]>=p}?=>
-<op.tokenText><if(buildTree)>^<endif> <ruleName>_expr[0] <op.ternaryText><if(buildTree)>!<endif> <ruleName>_expr[p] 
+<op.tokenText><if(buildTree)>^<endif> <ruleName>_expr[0] <op.ternaryText><if(buildTree)>!<endif> <if(op.ternaryAfter)><ruleName>_expr[p]<endif>
 >>
