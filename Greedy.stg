@@ -55,7 +55,7 @@ prec(precl,level,name) ::= <<
 exprRule(name,terminals,bops,uops,tops,buildTree) ::= <<
 
 <name> : <name>_expr[0] ;
-<name>_expr[int p]
+<name>_expr[int p] options {strategy=precedence;}
    :   <name>_terminals
        ( options {backtrack=false;}: //to prevent our predicate from being hoisted
 		{<name>_prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[<name>_nextp(p)]
