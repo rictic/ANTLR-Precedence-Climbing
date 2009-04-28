@@ -17,7 +17,7 @@ header(name, precedences) ::= <<
 
 static int[] <name>_prec = new int[tokenNames.length];
 static int[] <name>_uprec = new int[tokenNames.length];
-static int[] <name>_postprec = new int[tokenNames.length];
+static int[] <name>_tprec = new int[tokenNames.length];
 static int[] <name>_assoc = new int[tokenNames.length];
 static {
 	<precedences:prec(precl=it,level=i,name=name)>
@@ -38,6 +38,9 @@ prec(precl,level,name) ::= <<
     <if(p.unary)>
 		<name>_uprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
     <endif>
+	<if(p.ternary)>
+		<name>_tprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
+	<endif>
     <if(p.rightAssoc)>
 		<name>_assoc[lookupTokenFromGrammarString("<p.tokenText>")] = RIGHT;
     <else>
@@ -56,12 +59,16 @@ exprRule(name,terminals,bops,uops,tops,buildTree) ::= <<
    :   <name>_terminals
        ( options {backtrack=false;}: //to prevent our predicate from being hoisted
 		{<name>_prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[<name>_nextp(p)]
-
+	     <if(first(tops))>| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree)> <endif>
        )*
    <if(uops)>|   <if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif> {int q=<name>_uprec[input.LA(-1)];} <name>_expr[q]<endif>
-   /*<if(tops)>|	<name>_terminals<endif>*/
    ;
 <name>_terminals
    :	<terminals;separator="|">;
 
+>>
+
+ternaryOp(op, ruleName, buildTree) ::= <<
+{<name>_tprec[input.LA(1)]>=p}?=>
+<op.tokenText><if(buildTree)>^<endif> <ruleName>_expr[0] <op.ternaryText><if(buildTree)>!<endif> <ruleName>_expr[p] 
 >>

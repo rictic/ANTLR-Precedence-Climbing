@@ -7,12 +7,12 @@ expression : e;
 e options {strategy=precedence;}
   : e ('$'|'$!') e
   | e ('>>'|'>>=') e
+  | e '?' e '!' e
   | e '||' <associativity=right> e 
   | e '&&' <associativity=right> e
   | e ('=='|'/='|'<'|'<='|'>='|'>') e
   | e ':' <associativity=right> e
   | e ('+'|'-') e
-  | e '?' e '!' e
   | e ('*'|'/') e
   | '-' e
   | e ('^' <associativity=right>|'^^' <associativity=right>|'**' <associativity=right>) e

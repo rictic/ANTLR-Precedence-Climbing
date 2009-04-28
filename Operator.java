@@ -1,4 +1,3 @@
-
 class Operator {
   public enum Kind {Unary, Binary, TernaryPair};
   public Kind kind;
@@ -8,6 +7,7 @@ class Operator {
   public Associativity assoc;
   public Operator ternary = null;
   public boolean ternaryAfter;
+  public String ternaryText;
   public boolean isBinary() {
     return kind == Kind.Binary;
   }
@@ -33,6 +33,8 @@ class Operator {
     if (ternary != null)
       result += " (" + ternary.toString() + ")";
     return result; 
-    
+  }
+  public String sndop() {
+    return ternary.tokenText;
   }
 }

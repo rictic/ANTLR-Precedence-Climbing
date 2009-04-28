@@ -15,7 +15,7 @@ expression:
 "1+1==2&&True||False" -> (|| (&& (== (+ 1 1) 2) True) False)
 "f.g$h" -> ($ (. f g) h)
 //not actually haskell, but..
-"1==1?f!g" -> (? (== 1 1) (f) (g))
+"1==1?f!g" -> (? (== 1 1) f g)
 
 g:
 "abc" -> "abc"

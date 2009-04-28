@@ -71,7 +71,7 @@ public class ExpressionTransformer {
          
       List<String> binaryOps = new ArrayList<String>();
       List<String> unaryOps = new ArrayList<String>();
-      List<String> ternaryOps = new ArrayList<String>();
+      List<Operator> ternaryOps = new ArrayList<Operator>();
       for (List<Operator> ops : rule.precidenceOpers) {
         if (ops == null) continue;
         for (Operator op : ops) {
@@ -79,11 +79,16 @@ public class ExpressionTransformer {
             binaryOps.add(op.tokenText);
           else if (op.kind == Operator.Kind.Unary)
             unaryOps.add(op.tokenText);
-          else if (op.kind == Operator.Kind.TernaryPair)
-            ternaryOps.add(op.tokenText);
+          else if (op.kind == Operator.Kind.TernaryPair){
+            ternaryOps.add(op);
+            op.ternaryText = op.sndop();
+          }
         }
       }
       
+      System.err.println("ternaries: " + ternaryOps);
+      if (ternaryOps.size() > 0)
+        System.err.println(ternaryOps.get(0).ternary.tokenText);
       StringTemplate ruleTemplate = stg.getInstanceOf("exprRule");
       ruleTemplate.setAttribute("name",rule.name);
       ruleTemplate.setAttribute("terminals", rule.terminals);
