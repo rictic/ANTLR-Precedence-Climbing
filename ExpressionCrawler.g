@@ -69,7 +69,7 @@ optionsSpec returns [boolean isExpression]
 option returns [boolean isExpression]
     : ^('=' key=ID val=optionValue)
     {if ($key.text.equals("strategy"))
-      return $val.text.equals("tokenGrab");
+      return $val.text.equals("precedence");
      return false;}
  	;
  	

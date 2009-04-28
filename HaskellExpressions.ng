@@ -4,8 +4,7 @@ grammar HaskellExpressions;
 expressions : expression ('\n' expression)+ EOF;
 
 expression : e;
-//precedence
-e options {strategy=tokenGrab;}
+e options {strategy=precedence;}
   : e ('$'|'$!') e
   | e ('>>'|'>>=') e
   | e '||' <associativity=right> e 
@@ -13,7 +12,7 @@ e options {strategy=tokenGrab;}
   | e ('=='|'/='|'<'|'<='|'>='|'>') e
   | e ':' <associativity=right> e
   | e ('+'|'-') e
-/*  | e '?' e ':' e*/
+  | e '?' e '!' e
   | e ('*'|'/') e
   | '-' e
   | e ('^' <associativity=right>|'^^' <associativity=right>|'**' <associativity=right>) e
@@ -22,7 +21,7 @@ e options {strategy=tokenGrab;}
   | BOOL
   | ID;
 
-g options {strategy=tokenGrab;}
+g options {strategy=precedence;}
   : g ('.') g
   | g ('!') g
   | WORD;

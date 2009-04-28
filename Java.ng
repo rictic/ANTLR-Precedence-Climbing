@@ -837,7 +837,7 @@ expression
         ->  ^(EXPR assignmentExpression)
     ;
 
-assignmentExpression options {strategy=tokenGrab;}
+assignmentExpression options {strategy=precedence;}
     :   assignmentExpression
         (   ASSIGN
             |   PLUS_ASSIGN
