@@ -251,43 +251,16 @@ constantExpression
 
 
 e   options{strategy=precedence;}
-    :   e ('='|'+='|'-='|'*='|'/='|'&='|'|='|'^='/*|'%='*/) e
-    |   conditionalExpression
+    :   e ('='|'+='|'-='|'*='|'/='|'&='|'|='|'^='|'>>='|'>>>='|'<<='|'<<<='/*|'%='*/) e
+    |   e '?' e ':' e
+/*    |   e '||' e*/
+/*    |   e '&&' e*/
+/*    |   e '|' e*/
+/*    |   e '^' e*/
+/*    |   e '&' e*/
+    |   conditionalOrExpression
     ;
     
-assignmentOperator
-    :   '=' 
-    |   '+='
-    |   '-='
-    |   '*='
-    |   '/='
-    |   '&='
-    |   '|='
-    |   '^='
-    |   '%='
-    |   ('<' '<' '=')=> t1='<' t2='<' t3='=' 
-        { $t1.getLine() == $t2.getLine() &&
-          $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine() && 
-          $t2.getLine() == $t3.getLine() && 
-          $t2.getCharPositionInLine() + 1 == $t3.getCharPositionInLine() }?
-    |   ('>' '>' '>' '=')=> t1='>' t2='>' t3='>' t4='='
-        { $t1.getLine() == $t2.getLine() && 
-          $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine() &&
-          $t2.getLine() == $t3.getLine() && 
-          $t2.getCharPositionInLine() + 1 == $t3.getCharPositionInLine() &&
-          $t3.getLine() == $t4.getLine() && 
-          $t3.getCharPositionInLine() + 1 == $t4.getCharPositionInLine() }?
-    |   ('>' '>' '=')=> t1='>' t2='>' t3='='
-        { $t1.getLine() == $t2.getLine() && 
-          $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine() && 
-          $t2.getLine() == $t3.getLine() && 
-          $t2.getCharPositionInLine() + 1 == $t3.getCharPositionInLine() }?
-    ;
-
-conditionalExpression
-    :   conditionalOrExpression ( '?'^ e ':'! e )?
-    ;
-
 
 conditionalOrExpression
     :   conditionalAndExpression ( '||'^ conditionalAndExpression )*
@@ -318,7 +291,7 @@ instanceOfExpression
     ;
 
 relationalExpression
-    :   shiftExpression ( relationalOp shiftExpression )*
+    :   shiftExpression ( relationalOp^ shiftExpression )*
     ;
     
 relationalOp
