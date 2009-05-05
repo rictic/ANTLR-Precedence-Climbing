@@ -23,6 +23,7 @@ class Operator {
   public boolean isLeftAssoc() {
     return assoc == Associativity.Left;
   }
+  public String getSafeTokenText() { return tokenText.replace("%","\\%");}
   public Operator(int tokenType, String tokenText, Associativity assoc) {
     this.tokenType = tokenType; this.assoc=assoc; this.tokenText = tokenText;
   }

@@ -251,36 +251,16 @@ constantExpression
 
 
 e   options{strategy=precedence;}
-    :   e ('='|'+='|'-='|'*='|'/='|'&='|'|='|'^='|'>>='|'>>>='|'<<='|'<<<='/*|'%='*/) e
+    :   e ('=' <associativity=right> |'+='|'-='|'*='|'/='|'&='|'|='|'^='|'>>='|'>>>='|'<<='|'<<<='|'%=') e
     |   e '?' e ':' e
-/*    |   e '||' e*/
-/*    |   e '&&' e*/
-/*    |   e '|' e*/
-/*    |   e '^' e*/
-/*    |   e '&' e*/
-    |   conditionalOrExpression
+    |   e '||' e
+    |   e '&&' e
+    |   e '|' e
+    |   e '^' e
+    |   e '&' e
+    |   equalityExpression
     ;
     
-
-conditionalOrExpression
-    :   conditionalAndExpression ( '||'^ conditionalAndExpression )*
-    ;
-
-conditionalAndExpression
-    :   inclusiveOrExpression ( '&&'^ inclusiveOrExpression )*
-    ;
-
-inclusiveOrExpression
-    :   exclusiveOrExpression ( '|'^ exclusiveOrExpression )*
-    ;
-
-exclusiveOrExpression
-    :   andExpression ( '^'^ andExpression )*
-    ;
-
-andExpression
-    :   equalityExpression ( '&'^ equalityExpression )*
-    ;
 
 equalityExpression
     :   instanceOfExpression ( ('=='^ | '!='^) instanceOfExpression )*

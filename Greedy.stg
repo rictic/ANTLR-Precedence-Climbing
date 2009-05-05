@@ -32,20 +32,8 @@ int <name>_nextp(int p) {
 prec(precl,level,name) ::= <<
 
 <precl:{p|
-    <if(p.binary)>
-		<name>_prec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
-    <endif>
-    <if(p.unary)>
-		<name>_uprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
-    <endif>
-	<if(p.ternary)>
-		<name>_tprec[lookupTokenFromGrammarString("<p.tokenText>")] = <level>;
-	<endif>
-    <if(p.rightAssoc)>
-		<name>_assoc[lookupTokenFromGrammarString("<p.tokenText>")] = RIGHT;
-    <else>
-		<name>_assoc[lookupTokenFromGrammarString("<p.tokenText>")] = LEFT;
-	<endif>
+	<name>_<if(p.unary)>u<endif><if(p.ternary)>t<endif>prec[lookupTokenFromGrammarString("<p.safeTokenText>")] = <level>;
+	<name>_assoc[lookupTokenFromGrammarString("<p.safeTokenText>")] = <if(p.rightAssoc)>RIGHT<else>LEFT<endif>;
 }>
 >>
 
