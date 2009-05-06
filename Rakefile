@@ -29,14 +29,16 @@ task :test_grammar do #=> [:compile] do
   end
   compileJava
   
-  ["OriginalJava.gunit", "Java.gunit"].each {|f|
+  ["OriginalJava.gunit", "Java.gunit"].each do |f|
     if need_compile?(["Java.ngunit"],f)
       sh "echo 'gunit #{f.sub('.gunit','')};\n' > #{f}"
       sh "cat Java.ngunit >> #{f}"
+      sh "java org.antlr.gunit.Interp #{f}"
     end
-  }
+  end
   
-  FileList["*.gunit"].each do |file|
+#   FileList["*.gunit"].each do |file|
+  ["HaskellExpressions.gunit", "OriginalJava.gunit", "Java.gunit"].each do |file|
     sh "java org.antlr.gunit.Interp #{file}"
   end
 end

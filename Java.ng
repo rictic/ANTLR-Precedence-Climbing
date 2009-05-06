@@ -251,85 +251,44 @@ constantExpression
 
 
 e   options{strategy=precedence;}
-    :   e ('=' <associativity=right> |'+='|'-='|'*='|'/='|'&='|'|='|'^='|'>>='|'>>>='|'<<='|'<<<='|'%=') e
+    :   e ('=' <associativity=right> 
+          |'+=' <associativity=right>
+          |'-=' <associativity=right>
+          |'*=' <associativity=right>
+          |'/=' <associativity=right>
+          |'&=' <associativity=right>
+          |'|=' <associativity=right>
+          |'^=' <associativity=right>
+          |'>>=' <associativity=right>
+          |'>>>=' <associativity=right>
+          |'<<=' <associativity=right>
+          |'<<<=' <associativity=right>
+          |'%=' <associativity=right>) e
     |   e '?' e ':' e
     |   e '||' e
     |   e '&&' e
     |   e '|' e
     |   e '^' e
     |   e '&' e
-    |   equalityExpression
-    ;
-    
-
-equalityExpression
-    :   instanceOfExpression ( ('=='^ | '!='^) instanceOfExpression )*
-    ;
-
-instanceOfExpression
-    :   relationalExpression ('instanceof'^ type)?
-    ;
-
-relationalExpression
-    :   shiftExpression ( relationalOp^ shiftExpression )*
-    ;
-    
-relationalOp
-    :   ('<' '=')=> t1='<' t2='=' 
-        { $t1.getLine() == $t2.getLine() && 
-          $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine() }?
-    |   ('>' '=')=> t1='>' t2='=' 
-        { $t1.getLine() == $t2.getLine() && 
-          $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine() }?
-    |   '<' 
-    |   '>' 
+    |   e ('==' | '!=') e
+    |   e 'instanceof' type
+    |   e ('<=' | '>=' | '>' | '<') e
+    |   e ('<<'|'>>>'|'>>') e
+    |   e ('+'|'-') e
+    |   e ('*'|'/'|'%') e
+    |   ('+'|'-'|'++'|'--') e
+    |   ('~'|'!') e
+    |   prim
     ;
 
-shiftExpression
-    :   additiveExpression ( shiftOp additiveExpression )*
-    ;
-
-shiftOp
-    :   ('<' '<')=> t1='<' t2='<' 
-        { $t1.getLine() == $t2.getLine() && 
-          $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine() }?
-    |   ('>' '>' '>')=> t1='>' t2='>' t3='>' 
-        { $t1.getLine() == $t2.getLine() && 
-          $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine() &&
-          $t2.getLine() == $t3.getLine() && 
-          $t2.getCharPositionInLine() + 1 == $t3.getCharPositionInLine() }?
-    |   ('>' '>')=> t1='>' t2='>'
-        { $t1.getLine() == $t2.getLine() && 
-          $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine() }?
-    ;
-
-
-additiveExpression
-    :   multiplicativeExpression ( ('+'^ | '-'^) multiplicativeExpression )*
-    ;
-
-multiplicativeExpression
-    :   unaryExpression ( ( '*'^ | '/'^ | '%'^ ) unaryExpression )*
-    ;
-    
-unaryExpression
-    :   '+'^ unaryExpression
-    |   '-'^ unaryExpression
-    |   '++'^ unaryExpression
-    |   '--'^ unaryExpression
-    |   unaryExpressionNotPlusMinus
-    ;
-
-unaryExpressionNotPlusMinus
-    :   '~'^ unaryExpression
-    |   '!'^ unaryExpression
-    |   castExpression
+prim
+    :   castExpression
     |   primary selector* ('++'|'--')?
     ;
 
 castExpression
-    :  '(' primitiveType ')' unaryExpression
-    |  '(' (type | e) ')' unaryExpressionNotPlusMinus
+    :  '(' primitiveType ')' e
+    |  '(' (type | e) ')' e
     ;
 
 primary
