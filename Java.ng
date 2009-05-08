@@ -278,11 +278,7 @@ e   options{strategy=precedence;}
     |   e ('*'|'/'|'%') e
     |   ('+'|'-'|'++'|'--') e
     |   ('~'|'!') e
-    |   prim
-    ;
-
-prim
-    :   castExpression
+    |   castExpression
     |   primary selector* ('++'|'--')?
     ;
 

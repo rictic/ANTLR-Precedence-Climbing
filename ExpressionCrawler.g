@@ -95,29 +95,32 @@ alternative returns [List<Operator> opers]
                                 for(Operator op : $opers)
                                   op.kind = Operator.Kind.Binary;
                               }
-                                
+                              else 
+                                 $rule::terminals.add($text);
                              }
     |   ^(ALT o=ops v=RULE_REF EOA) {if ($v.text.equals($rule::name)){
                                         $opers = $o.opers;
                                         for (Operator op : $opers)
                                           op.kind = Operator.Kind.Unary;
-                                    }}
+                                    }
+                                     else 
+                                       $rule::terminals.add($text); 
+                                    }
     |   ^(ALT p=RULE_REF q=op t=RULE_REF c=op f=RULE_REF? EOA)
                       {if (  $p.text.equals($rule::name)
                            &&$t.text.equals($rule::name)
                            &&($f.text == null || $f.text.equals($rule::name))) {
-                          opers = new ArrayList<Operator>();
+                          $opers = new ArrayList<Operator>();
                           $q.oper.ternary = $c.oper;
                           $q.oper.kind = Operator.Kind.TernaryPair;
                           $q.oper.ternaryAfter = $f.text != null;
-                          opers.add($q.oper);
+                          $opers.add($q.oper);
                        }
+                       else
+                         $rule::terminals.add($text);
                       }
-    |   ^(ALT terminals EOA)
-    |   ^(ALT .* )
+    |   ^(ALT .* ) {$rule::terminals.add($text);}
     ;
-
-terminals : ((l=STRING_LITERAL | l=CHARLITERAL | l=TOKEN_REF | l=RULE_REF){$rule::terminals.add($l.text);})+ ;
 
 ops returns [List<Operator> opers]
 @init {
