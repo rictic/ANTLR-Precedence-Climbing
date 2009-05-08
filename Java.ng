@@ -271,7 +271,7 @@ e   options{strategy=precedence;}
     |   e '^' e
     |   e '&' e
     |   e ('==' | '!=') e
-    |   e 'instanceof' type
+    |   e 'instanceof' e
     |   e ('<=' | '>=' | '>' | '<') e
     |   e ('<<'|'>>>'|'>>') e
     |   e ('+'|'-') e
