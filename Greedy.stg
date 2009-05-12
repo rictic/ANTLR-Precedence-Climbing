@@ -62,13 +62,15 @@ exprRule(name,terminals,bops,pops,sops,tops,buildTree) ::= <<
   ;
 
 <name>_primaries[final int p]
-	:	<terminals;separator="|">
-<if(pops)>
-	//prefix ops
-	|	<if(rest(pops))>(<pops;separator="|">)<else><pops><endif><if(buildTree)>^<endif>  <name>_expr[<name>_uprec[input.LA(-1)\] ]<endif>
+	:	<[terminals,prefixOps(pops=pops,name=name,buildTree=buildTree)];separator="|">
 	;
 
+>>
 
+prefixOps(pops, name, buildTree) ::= <<
+<if(pops)>
+//prefix ops
+<if(rest(pops))>(<pops;separator="|">)<else><pops><endif><if(buildTree)>^<endif>  <name>_expr[<name>_uprec[input.LA(-1)\] ]<endif>
 >>
 
 ternaryOp(op, ruleName, buildTree) ::= <<
