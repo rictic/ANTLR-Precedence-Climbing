@@ -44,15 +44,20 @@ exprRule(name,terminals,bops,uops,tops,buildTree) ::= <<
 
 <name> : <name>_expr[0] ;
 <name>_expr[final int p] options {strategy=precedence;}
-   :   (<name>_primaries[p]) {;}
-       ( options {backtrack=false; }: //to prevent our predicate from being hoisted
+   :   <name>_primaries[p] {;}        //to prevent our predicate from being hoisted
+       ( options {backtrack=false; }: //also prevents hoisting
+		//binary ops:
 	    {<name>_prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[<name>_nextp(p)] {;}
-	     <if(first(tops))>| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree);separator="|"> <endif>
-       )*
+	     <if(first(tops))>
+		//ternary ops:
+		| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree);separator="|"> <endif>
+       )* 
    ;
 <name>_primaries[final int p]
 	:	<terminals;separator="|">
-<if(uops)>	|	<if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif>  <name>_expr[<name>_uprec[input.LA(-1)\] ]<endif>
+<if(uops)>
+	//unary ops
+	|	<if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif>  <name>_expr[<name>_uprec[input.LA(-1)\] ]<endif>
 	;
 
 
