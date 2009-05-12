@@ -378,7 +378,7 @@ unaryExpressionNotPlusMinus
     :   '~'^ unaryExpression
     |   '!'^ unaryExpression
     |   castExpression
-    |   primary selector* ('++'|'--')?
+    |   primary selector* ('++'^|'--'^)?
     ;
 
 castExpression
@@ -389,12 +389,12 @@ castExpression
 primary
     :   parExpression
     |   'this' ('.' Identifier)* identifierSuffix?
-    |   'super' superSuffix
+    |   'super'^ superSuffix
     |   literal
-    |   'new' Identifier '(' ')'
+    |   'new'^ Identifier '('! ')'!
     |   Identifier ('.' Identifier)* identifierSuffix?
-    |   primitiveType ('[' ']')* '.' 'class'
-    |   'void' '.' 'class'
+    |   primitiveType ('[' ']')* '.'^ 'class'
+    |   'void' '.'^ 'class'
     ;
 
 identifierSuffix
@@ -415,11 +415,11 @@ selector
     
 superSuffix
     :   arguments
-    |   '.' Identifier arguments?
+    |   '.'^ Identifier arguments?
     ;
 
 arguments
-    :   '(' expressionList? ')'
+    :   '('^ expressionList? ')'!
     ;
 
 // LEXER
