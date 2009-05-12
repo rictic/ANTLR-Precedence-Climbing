@@ -50,16 +50,15 @@ exprRule(name,terminals,bops,pops,sops,tops,buildTree) ::= <<
 	    {<name>_prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[<name>_nextp(p)] {;}
 	     <if(first(tops))>
 		//ternary ops:
-		| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree);separator="|"> <endif>
+		| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree);separator="
+		| "> <endif>
        )* 
    ;
 
 <name>_suffix_primaries[final int p]
-  : <name>_primaries[p]
-<if(sops)>
+  : <name>_primaries[p]<if(sops)>
   //suffix ops
-  ((<sops;separator="|">)<if(buildTree)>^<endif>)*
-<endif>  
+  ((<sops;separator="|">)<if(buildTree)>^<endif>)*<endif>
   ;
 
 <name>_primaries[final int p]
@@ -73,6 +72,5 @@ exprRule(name,terminals,bops,pops,sops,tops,buildTree) ::= <<
 >>
 
 ternaryOp(op, ruleName, buildTree) ::= <<
-{<name>_tprec[input.LA(1)]>=p}?=>
-	<op.tokenText><if(buildTree)>^<endif> {;} <ruleName>_expr[0] <op.ternaryText><if(buildTree)>!<endif> <if(op.ternaryAfter)><ruleName>_expr[p]<endif>
+{<name>_tprec[input.LA(1)]>=p}?=> <op.tokenText><if(buildTree)>^<endif> {;} <ruleName>_expr[0] <op.ternaryText><if(buildTree)>!<endif> <if(op.ternaryAfter)><ruleName>_expr[p]<endif>
 >>
