@@ -24,7 +24,6 @@ public class ExpressionTransformer {
     ANTLRv3Parser p = new ANTLRv3Parser(tokens);
     RuleReturnScope r = p.grammarDef();   
     CommonTree t = (CommonTree)r.getTree();
-//    System.err.println("tree: "+t.toStringTree());
     CommonTreeNodeStream nodes = new CommonTreeNodeStream(t);
     nodes.setTokenStream(tokens);
     ExpressionCrawler ref = new ExpressionCrawler(nodes);
@@ -78,9 +77,6 @@ public class ExpressionTransformer {
         }
       }
       
-      System.err.println("ternaries: " + ternaryOps);
-      if (ternaryOps.size() > 0)
-        System.err.println(ternaryOps.get(0).ternary.tokenText);
       StringTemplate ruleTemplate = stg.getInstanceOf("exprRule");
       ruleTemplate.setAttribute("name",rule.name);
       ruleTemplate.setAttribute("terminals", rule.terminals);
