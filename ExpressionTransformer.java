@@ -61,15 +61,18 @@ public class ExpressionTransformer {
       membersText += header;
          
       List<String> binaryOps = new ArrayList<String>();
-      List<String> unaryOps = new ArrayList<String>();
+      List<String> prefixOps = new ArrayList<String>();
+      List<String> suffixOps = new ArrayList<String>();
       List<Operator> ternaryOps = new ArrayList<Operator>();
       for (List<Operator> ops : rule.precidenceOpers) {
         if (ops == null) continue;
         for (Operator op : ops) {
           if (op.kind == Operator.Kind.Binary)
             binaryOps.add(op.tokenText);
-          else if (op.kind == Operator.Kind.Unary)
-            unaryOps.add(op.tokenText);
+          else if (op.kind == Operator.Kind.Prefix)
+            prefixOps.add(op.tokenText);
+          else if (op.kind == Operator.Kind.Suffix)
+            suffixOps.add(op.tokenText);
           else if (op.kind == Operator.Kind.TernaryPair){
             ternaryOps.add(op);
             op.ternaryText = op.sndop();
@@ -81,7 +84,8 @@ public class ExpressionTransformer {
       ruleTemplate.setAttribute("name",rule.name);
       ruleTemplate.setAttribute("terminals", rule.terminals);
       ruleTemplate.setAttribute("bops", binaryOps);
-      ruleTemplate.setAttribute("uops", unaryOps);
+      ruleTemplate.setAttribute("pops", prefixOps);
+      ruleTemplate.setAttribute("sops", suffixOps);
       ruleTemplate.setAttribute("tops", ternaryOps);
       ruleTemplate.setAttribute("buildTree", buildTree);
       

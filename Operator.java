@@ -1,5 +1,5 @@
 class Operator {
-  public enum Kind {Unary, Binary, TernaryPair};
+  public enum Kind {Prefix, Suffix, Binary, TernaryPair};
   public Kind kind;
   public int tokenType;
   public String tokenText;
@@ -11,8 +11,11 @@ class Operator {
   public boolean isBinary() {
     return kind == Kind.Binary;
   }
-  public boolean isUnary() {
-    return kind == Kind.Unary;
+  public boolean isPrefix() {
+    return kind == Kind.Prefix;
+  }
+  public boolean isSuffix() {
+    return kind == Kind.Suffix;
   }
   public boolean isTernary() {
     return kind == Kind.TernaryPair;
@@ -28,7 +31,14 @@ class Operator {
     this.tokenType = tokenType; this.assoc=assoc; this.tokenText = tokenText;
   }
   public String toString() {
-    String result = kind == Kind.Binary ? "B" : kind == Kind.Unary ? "U" : "T";
+    String result = "";
+    switch (kind)
+    {
+      case Binary: result = "B"; break;
+      case Prefix: result = "P"; break;
+      case Suffix: result = "S"; break;
+      case TernaryPair: result = "T"; break;
+    }
     result += assoc == Associativity.Right ? "R " : "L ";
     result += '"' + tokenText + '"';
     if (ternary != null)

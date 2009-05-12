@@ -32,7 +32,7 @@ int <name>_nextp(int p) {
 prec(precl,level,name) ::= <<
 
 <precl:{p|
-	<name>_<if(p.unary)>u<endif><if(p.ternary)>t<endif>prec[lookupTokenFromGrammarString("<p.safeTokenText>")] = <level>;
+	<name>_<if(p.prefix)>u<endif><if(p.ternary)>t<endif>prec[lookupTokenFromGrammarString("<p.safeTokenText>")] = <level>;
 	<name>_assoc[lookupTokenFromGrammarString("<p.safeTokenText>")] = <if(p.rightAssoc)>RIGHT<else>LEFT<endif>;
 }>
 >>
@@ -40,11 +40,11 @@ prec(precl,level,name) ::= <<
 
 
 
-exprRule(name,terminals,bops,uops,tops,buildTree) ::= <<
+exprRule(name,terminals,bops,pops,sops,tops,buildTree) ::= <<
 
 <name> : <name>_expr[0] ;
 <name>_expr[final int p] options {strategy=precedence;}
-   :   <name>_primaries[p] {;}        //to prevent our predicate from being hoisted
+   :   <name>_suffix_primaries[p] {;}        //to prevent our predicate from being hoisted
        ( options {backtrack=false; }: //also prevents hoisting
 		//binary ops:
 	    {<name>_prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[<name>_nextp(p)] {;}
@@ -53,11 +53,20 @@ exprRule(name,terminals,bops,uops,tops,buildTree) ::= <<
 		| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree);separator="|"> <endif>
        )* 
    ;
+
+<name>_suffix_primaries[final int p]
+  : <name>_primaries[p]
+<if(sops)>
+  //suffix ops
+  ((<sops;separator="|">)<if(buildTree)>^<endif>)*
+<endif>  
+  ;
+
 <name>_primaries[final int p]
 	:	<terminals;separator="|">
-<if(uops)>
-	//unary ops
-	|	<if(rest(uops))>(<uops;separator="|">)<else><uops><endif><if(buildTree)>^<endif>  <name>_expr[<name>_uprec[input.LA(-1)\] ]<endif>
+<if(pops)>
+	//prefix ops
+	|	<if(rest(pops))>(<pops;separator="|">)<else><pops><endif><if(buildTree)>^<endif>  <name>_expr[<name>_uprec[input.LA(-1)\] ]<endif>
 	;
 
 

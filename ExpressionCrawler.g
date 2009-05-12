@@ -46,7 +46,7 @@ scope {
 }
  : ^( RULE v=ID {$rule::name=$v.text;} (ARG .*)? ('returns' .*)?
 	  (^('throws' .*))? opts=optionsSpec 
-	  { if ($opts.isExpression) System.err.println(ruleTree.toStringTree());}
+	  /*{ if ($opts.isExpression) System.err.println(ruleTree.toStringTree());}*/
 	  ('scope' .*)? ('@' ID ACTION)*
 	  aL=altList
 	  (^('catch' .*))* (^('finally' .*))?
@@ -54,8 +54,6 @@ scope {
 	)
 	{ if ($opts.isExpression) {
         rule_scope rs = (rule_scope)rule_stack.peek();
-        System.err.println(aL);
-        System.err.println(rs.terminals);
         expressionRules.add(new ExpressionRule(rs.name, rs.terminals, aL, startIndex, ((CommonTree)input.LT(1)).getTokenStartIndex()-1)); 
 	  }
 	}
@@ -101,7 +99,7 @@ alternative returns [List<Operator> opers]
     |   ^(ALT o=ops v=RULE_REF EOA) {if ($v.text.equals($rule::name)){
                                         $opers = $o.opers;
                                         for (Operator op : $opers)
-                                          op.kind = Operator.Kind.Unary;
+                                          op.kind = Operator.Kind.Prefix;
                                     }
                                      else 
                                        $rule::terminals.add($text); 
@@ -117,9 +115,23 @@ alternative returns [List<Operator> opers]
                           $opers.add($q.oper);
                        }
                        else
-                         $rule::terminals.add($text);
+                          $rule::terminals.add($text);
                       }
-    |   ^(ALT .* ) {$rule::terminals.add($text);}
+    |   ^(ALT e=RULE_REF o=ops EOA) {
+              if ($e.text.equals($rule::name)){
+                System.err.println($text);
+                $opers = $o.opers;
+                for(Operator op : $opers){
+                  op.kind = Operator.Kind.Suffix;
+                }
+              }
+              else {
+                $rule::terminals.add($text);
+              }
+            }
+    |   ^(ALT .*) {
+          $rule::terminals.add($text);
+        }
     ;
 
 ops returns [List<Operator> opers]
@@ -137,7 +149,6 @@ op returns [Operator oper]
   String opText = null;
 }
 @after {
-  System.err.println("-!- " + opText);
   $oper = new Operator(input.LA(-1), opText, assoc);
 }   : l=opVal {opText = $l.text;}
     | ^(l=opVal tops=tokenOptions 

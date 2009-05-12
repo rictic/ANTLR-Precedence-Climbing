@@ -244,12 +244,6 @@ expressionList
     :   e (',' e)*
     ;
     
-constantExpression
-    :   e
-    ;
-    
-
-
 e   options{strategy=precedence;}
     :   e ('=' <associativity=right> 
           |'+=' <associativity=right>
@@ -278,29 +272,27 @@ e   options{strategy=precedence;}
     |   e ('*'|'/'|'%') e
     |   ('+'|'-'|'++'|'--') e
     |   ('~'|'!') e
-    |   castExpression
-    |   primary selector* ('++'|'--')?
+    |   e '[' e ']'
+    |   '(' (primitiveType | type | e) ')' e
+    |   primary selector*
+    |   parExpression
+    |   literal
+    |   e ('++' | '--')
     ;
-
-castExpression
-    :  '(' primitiveType ')' e
-    |  '(' (type | e) ')' e
-    ;
+    /*    |   e '.' Identifier*/
+    /*    |   e '(' args ')'*/
 
 primary
-    :   parExpression
-    |   'this' ('.' Identifier)* identifierSuffix?
+    :   'this' ('.' Identifier)* identifierSuffix?
     |   'super' superSuffix
-    |   literal
     |   'new' Identifier '(' ')'
     |   Identifier ('.' Identifier)* identifierSuffix?
     |   primitiveType ('[' ']')* '.' 'class'
     |   'void' '.' 'class'
-    ;
+    |   type '[]'* '.' 'class' ;
 
 identifierSuffix
     :   ('[' ']')+ '.' 'class'
-    |   ('[' e ']')+ // can also be matched by selector, but do here
     |   arguments
     |   '.' 'class'
     |   '.' 'this'
@@ -311,7 +303,6 @@ selector
     :   '.' Identifier arguments?
     |   '.' 'this'
     |   '.' 'super' superSuffix
-    |   '[' e ']'
     ;
     
 superSuffix
