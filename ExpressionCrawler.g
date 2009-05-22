@@ -15,9 +15,16 @@ options {
   private boolean isTopLevelAlternative() {
     return (currentRule != null) && ((CommonTree)input.LT(1)).parent.parent.getToken().getType() == RULE;
   }
+  private boolean isE() {
+    return ((CommonTree)input.LT(1)).getText().equals(currentRule.name);
+  }
 }
 
-topdown : grammarDef | action | rule | eor | binary | ternary | simplePrefix | simpleSuffix | primary;
+
+topdown : grammarDef | action | rule | eor
+        | binary | ternary
+        | simplePrefix | simpleSuffix
+        | primary;
 
 //Need to know where to put the members section
 grammarDef
@@ -79,21 +86,15 @@ optionValue
 
 
 binary :  {isTopLevelAlternative()}?=>
-          ^(ALT  v=RULE_REF o=ops k=RULE_REF EOA) {
-            if ($v.text.equals(currentRule.name) && $k.text.equals(currentRule.name)) {
-              for(Operator op : $o.opers)
-                op.kind = Operator.Kind.Binary;
-              currentRule.precidenceOpers.add($o.opers);
-            }
-            else 
-               currentRule.terminals.add($text);
+          ^(ALT {isE()}?=> RULE_REF o=ops {isE()}?=> RULE_REF EOA) {
+            for(Operator op : $o.opers)
+              op.kind = Operator.Kind.Binary;
+            currentRule.precidenceOpers.add($o.opers);
            };
 
 ternary : {isTopLevelAlternative()}?=>
-          ^(ALT p=RULE_REF q=op t=RULE_REF c=op f=RULE_REF? EOA) {
-            if (  $p.text.equals(currentRule.name)
-                &&$t.text.equals(currentRule.name)
-                &&($f.text == null || $f.text.equals(currentRule.name))) {
+          ^(ALT {isE()}?=>RULE_REF q=op {isE()}?=>RULE_REF c=op f=RULE_REF? EOA) {
+            if (($f.text == null || $f.text.equals(currentRule.name))) {
               List<Operator> opers = new ArrayList<Operator>();
               $q.oper.ternary = $c.oper;
               $q.oper.kind = Operator.Kind.TernaryPair;
@@ -107,27 +108,18 @@ ternary : {isTopLevelAlternative()}?=>
 
 
 simplePrefix :  {isTopLevelAlternative()}?=>
-                ^(ALT o=ops v=RULE_REF EOA) {
-                  if ($v.text.equals(currentRule.name)){
-                     for (Operator op : $o.opers)
-                       op.kind = Operator.Kind.Prefix;
-                     currentRule.precidenceOpers.add($o.opers);
-                  }
-                  else 
-                    currentRule.terminals.add($text); 
+                ^(ALT o=ops {isE()}?=>RULE_REF EOA) {
+                   for (Operator op : $o.opers)
+                     op.kind = Operator.Kind.Prefix;
+                   currentRule.precidenceOpers.add($o.opers);
                 };
 
 simpleSuffix :  {isTopLevelAlternative()}?=>
-                ^(ALT e=RULE_REF o=ops EOA) {
-                  if ($e.text.equals(currentRule.name)){
-                    System.err.println($text);
-                    for(Operator op : $o.opers)
-                      op.kind = Operator.Kind.Suffix;
-                    currentRule.precidenceOpers.add($o.opers);
-                  }
-                  else {
-                    currentRule.terminals.add($text);
-                  }
+                ^(ALT {isE()}?=>RULE_REF o=ops EOA) {
+                  System.err.println($text);
+                  for(Operator op : $o.opers)
+                    op.kind = Operator.Kind.Suffix;
+                  currentRule.precidenceOpers.add($o.opers);
                 };
 
 
