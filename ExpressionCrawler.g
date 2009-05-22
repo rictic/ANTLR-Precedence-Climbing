@@ -11,9 +11,13 @@ options {
   public ArrayList<ExpressionRule> expressionRules = new ArrayList<ExpressionRule>();
   public boolean hasMembersSection = false;
   public int membersLocation = 0;
+  public ExpressionRule currentRule = null;
+  private boolean isTopLevelAlternative() {
+    return (currentRule != null) && ((CommonTree)input.LT(1)).parent.parent.getToken().getType() == RULE;
+  }
 }
 
-topdown : rule | grammarDef | action;
+topdown : grammarDef | action | rule | eor | binary | ternary | simplePrefix | simpleSuffix | primary;
 
 //Need to know where to put the members section
 grammarDef
@@ -34,30 +38,25 @@ grammarDef
 
 //Find expression rules and gather the necessary info about them
 rule
-scope {
-  String name;
-  List<String> terminals;
-}
 @init {
   CommonTree ruleTree = (CommonTree)input.LT(1);
-  int startIndex = ruleTree.getTokenStartIndex();
-  $rule::terminals  = new ArrayList<String>();
-
 }
- : ^( RULE v=ID {$rule::name=$v.text;} (ARG .*)? ('returns' .*)?
+ : ^( RULE v=ID (ARG .*)? ('returns' .*)?
 	  (^('throws' .*))? opts=optionsSpec 
-	  /*{ if ($opts.isExpression) System.err.println(ruleTree.toStringTree());}*/
-	  ('scope' .*)? ('@' ID ACTION)*
-	  aL=altList
-	  (^('catch' .*))* (^('finally' .*))?
-	  EOR
-	)
-	{ if ($opts.isExpression) {
-        rule_scope rs = (rule_scope)rule_stack.peek();
-        expressionRules.add(new ExpressionRule(rs.name, rs.terminals, aL, startIndex, ((CommonTree)input.LT(1)).getTokenStartIndex()-1)); 
-	  }
-	}
+	  { if ($opts.isExpression) {
+	    System.err.println(ruleTree.toStringTree());
+	    currentRule = new ExpressionRule($v.text, ruleTree.getTokenStartIndex(), ruleTree.getTokenStopIndex());
+	  } }
+	  .* )
    	;
+
+eor :
+  EOR
+  { if (currentRule != null) {
+    expressionRules.add(currentRule);
+    currentRule = null;
+  }}
+  ;
 
 optionsSpec returns [boolean isExpression]
 	: {isExpression = false;} 
@@ -79,60 +78,65 @@ optionValue
     ;
 
 
-altList returns [List<List<Operator>> precOpers]
-@init {
-  $precOpers = new ArrayList<List<Operator>>();
-}
-    :   ^( BLOCK (a=alternative {$precOpers.add($a.opers);})+ EOB)
-    ;
-
-alternative returns [List<Operator> opers]
-    :   ^(ALT  v=RULE_REF o=ops k=RULE_REF EOA) {
-                              if ($v.text.equals($rule::name) && $k.text.equals($rule::name)) {
-                                $opers = $o.opers;
-                                for(Operator op : $opers)
-                                  op.kind = Operator.Kind.Binary;
-                              }
-                              else 
-                                 $rule::terminals.add($text);
-                             }
-    |   ^(ALT o=ops v=RULE_REF EOA) {if ($v.text.equals($rule::name)){
-                                        $opers = $o.opers;
-                                        for (Operator op : $opers)
-                                          op.kind = Operator.Kind.Prefix;
-                                    }
-                                     else 
-                                       $rule::terminals.add($text); 
-                                    }
-    |   ^(ALT p=RULE_REF q=op t=RULE_REF c=op f=RULE_REF? EOA)
-                      {if (  $p.text.equals($rule::name)
-                           &&$t.text.equals($rule::name)
-                           &&($f.text == null || $f.text.equals($rule::name))) {
-                          $opers = new ArrayList<Operator>();
-                          $q.oper.ternary = $c.oper;
-                          $q.oper.kind = Operator.Kind.TernaryPair;
-                          $q.oper.ternaryAfter = $f.text != null;
-                          $opers.add($q.oper);
-                       }
-                       else
-                          $rule::terminals.add($text);
-                      }
-    |   ^(ALT e=RULE_REF o=ops EOA) {
-              if ($e.text.equals($rule::name)){
-                System.err.println($text);
-                $opers = $o.opers;
-                for(Operator op : $opers){
-                  op.kind = Operator.Kind.Suffix;
-                }
-              }
-              else {
-                $rule::terminals.add($text);
-              }
+binary :  {isTopLevelAlternative()}?=>
+          ^(ALT  v=RULE_REF o=ops k=RULE_REF EOA) {
+            if ($v.text.equals(currentRule.name) && $k.text.equals(currentRule.name)) {
+              for(Operator op : $o.opers)
+                op.kind = Operator.Kind.Binary;
+              currentRule.precidenceOpers.add($o.opers);
             }
-    |   ^(ALT .*) {
-          $rule::terminals.add($text);
-        }
-    ;
+            else 
+               currentRule.terminals.add($text);
+           };
+
+ternary : {isTopLevelAlternative()}?=>
+          ^(ALT p=RULE_REF q=op t=RULE_REF c=op f=RULE_REF? EOA) {
+            if (  $p.text.equals(currentRule.name)
+                &&$t.text.equals(currentRule.name)
+                &&($f.text == null || $f.text.equals(currentRule.name))) {
+              List<Operator> opers = new ArrayList<Operator>();
+              $q.oper.ternary = $c.oper;
+              $q.oper.kind = Operator.Kind.TernaryPair;
+              $q.oper.ternaryAfter = $f.text != null;
+              opers.add($q.oper);
+              currentRule.precidenceOpers.add(opers);
+            }
+            else
+              currentRule.terminals.add($text);
+            };
+
+
+simplePrefix :  {isTopLevelAlternative()}?=>
+                ^(ALT o=ops v=RULE_REF EOA) {
+                  if ($v.text.equals(currentRule.name)){
+                     for (Operator op : $o.opers)
+                       op.kind = Operator.Kind.Prefix;
+                     currentRule.precidenceOpers.add($o.opers);
+                  }
+                  else 
+                    currentRule.terminals.add($text); 
+                };
+
+simpleSuffix :  {isTopLevelAlternative()}?=>
+                ^(ALT e=RULE_REF o=ops EOA) {
+                  if ($e.text.equals(currentRule.name)){
+                    System.err.println($text);
+                    for(Operator op : $o.opers)
+                      op.kind = Operator.Kind.Suffix;
+                    currentRule.precidenceOpers.add($o.opers);
+                  }
+                  else {
+                    currentRule.terminals.add($text);
+                  }
+                };
+
+
+primary :  {isTopLevelAlternative()}?=> 
+           ^(ALT .*) {
+          currentRule.terminals.add($text);
+        };
+
+
 
 ops returns [List<Operator> opers]
 @init {
@@ -173,6 +177,7 @@ tokenOption returns [boolean right]
 
 attrScope
 	:	^('scope' id ACTION);
+
 
 /** Match stuff like @parser::members {int i;} */
 action

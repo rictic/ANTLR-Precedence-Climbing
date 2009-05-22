@@ -35,10 +35,11 @@ public class ExpressionTransformer {
   
   public void printGrammar(boolean buildTree, PrintStream out) throws FileNotFoundException {
     if (expressions.size() == 0){
+      System.err.println("No valid expressions found");
       out.print(tokens);
       return;
     }
-      
+    
     
     StringTemplateGroup stg = new StringTemplateGroup(new FileReader("Greedy.stg"));
     
@@ -55,6 +56,7 @@ public class ExpressionTransformer {
     membersText += staticHeader;
     
     for (ExpressionRule rule: expressions) {
+      System.err.println("rewriteing rule: " + rule.name);
       StringTemplate header = stg.getInstanceOf("header");
       header.setAttribute("precedences", rule.precidenceOpers);
       header.setAttribute("name", rule.name);
