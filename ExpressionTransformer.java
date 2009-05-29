@@ -56,32 +56,34 @@ public class ExpressionTransformer {
     membersText += staticHeader;
     
     for (ExpressionRule rule: expressions) {
-      System.err.println("rewriteing rule: " + rule.name);
+      System.err.println("rewriteing rule: " + rule.name + "\nwith precidences: " + rule.precidenceOpers);
       StringTemplate header = stg.getInstanceOf("header");
       header.setAttribute("precedences", rule.precidenceOpers);
       header.setAttribute("name", rule.name);
       membersText += header;
          
-      List<String> binaryOps = new ArrayList<String>();
-      List<String> prefixOps = new ArrayList<String>();
-      List<String> suffixOps = new ArrayList<String>();
+      List<Operator> binaryOps = new ArrayList<Operator>();
+      List<Operator> prefixOps = new ArrayList<Operator>();
+      List<Operator> suffixOps = new ArrayList<Operator>();
       List<Operator> ternaryOps = new ArrayList<Operator>();
       for (List<Operator> ops : rule.precidenceOpers) {
         if (ops == null) continue;
         for (Operator op : ops) {
           if (op.kind == Operator.Kind.Binary)
-            binaryOps.add(op.tokenText);
+            binaryOps.add(op);
           else if (op.kind == Operator.Kind.Prefix)
-            prefixOps.add(op.tokenText);
+            prefixOps.add(op);
           else if (op.kind == Operator.Kind.Suffix)
-            suffixOps.add(op.tokenText);
+            suffixOps.add(op);
           else if (op.kind == Operator.Kind.TernaryPair){
             ternaryOps.add(op);
-            op.ternaryText = op.sndop();
           }
         }
       }
-      
+      System.err.println("binaries " + binaryOps);
+      System.err.println("primaries " + rule.terminals);
+      System.err.println("ternaries " + ternaryOps);
+      System.err.println("prefixes " + prefixOps);
       StringTemplate ruleTemplate = stg.getInstanceOf("exprRule");
       ruleTemplate.setAttribute("name",rule.name);
       ruleTemplate.setAttribute("terminals", rule.terminals);

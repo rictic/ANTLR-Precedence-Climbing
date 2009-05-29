@@ -8,8 +8,8 @@ end
 
 task :test => :test_grammar
 
-def compileJava
-  sources = FileList["*.java"].map {|f| [f, f.ext(".class")]}.collect {|(java, jclass)|
+def compileJava(exclude=[])
+  sources = (FileList["*.java"]-exclude).map {|f| [f, f.ext(".class")]}.collect {|(java, jclass)|
     java if need_compile?([java], jclass)
   }.compact
   sh "javac #{sources.join ' '}" unless sources.empty?
@@ -18,7 +18,7 @@ end
 task :test_grammar do #=> [:compile] do
   sh "java org.antlr.Tool ExpressionCrawler.g" if need_compile?(["ExpressionCrawler.g"], "ExpressionCrawler.java")
   sh "javac ExpressionCrawler.java" if need_compile?(["ExpressionCrawler.java"], "ExpressionCrawler.class")
-  sh "javac ExpressionTransformer.java" if need_compile?(["ExpressionTransformer.java"], "ExpressionTransformer.class")
+  compileJava(FileList["*Parser.java"] + FileList["*Lexer.java"] + FileList["*.g"].map{|f|f.ext("java")})
   FileList["*.ng"].each do |f|
     sh "java ExpressionTransformer #{f} > #{f.ext('g')}" if need_compile?([f,"Greedy.stg", "ExpressionTransformer.class", "ExpressionCrawler.class"], f.ext('g'))
   end

@@ -274,40 +274,21 @@ e   options{strategy=precedence;}
     |   ('~'|'!') e
     |   e '[' e ']'
     |   '(' (primitiveType | type | e) ')' e
-    |   primary selector*
+    |   e ('++' | '--')
     |   parExpression
     |   literal
-    |   e ('++' | '--')
-    ;
-    /*    |   e '.' Identifier*/
-    /*    |   e '(' args ')'*/
-
-primary
-    :   'this' ('.' Identifier)* identifierSuffix?
-    |   'super' superSuffix
-    |   'new' Identifier '(' ')'
-    |   Identifier ('.' Identifier)* identifierSuffix?
+    |   e arguments
+    |   e '.' 'class'
+    |   e '.' 'this'
+    |   e '.' 'super' arguments
+    |   e '.' e
+    |   Identifier
+    |   e 'new' Identifier arguments
     |   primitiveType ('[' ']')* '.' 'class'
+    |   type '[]'* '.' 'class'
+    |   'this' '.' e
+    |   e '[' ']'
     |   'void' '.' 'class'
-    |   type '[]'* '.' 'class' ;
-
-identifierSuffix
-    :   ('[' ']')+ '.' 'class'
-    |   arguments
-    |   '.' 'class'
-    |   '.' 'this'
-    |   '.' 'super' arguments
-    ;
-
-selector
-    :   '.' Identifier arguments?
-    |   '.' 'this'
-    |   '.' 'super' superSuffix
-    ;
-    
-superSuffix
-    :   arguments
-    |   '.' Identifier arguments?
     ;
 
 arguments

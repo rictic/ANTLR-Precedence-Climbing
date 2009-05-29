@@ -22,11 +22,12 @@ options {
 
 
 topdown : grammarDef | action | rule | eor
-        | binary | ternary
+        | ternary | binary
         | simplePrefix | simpleSuffix
+        | suffix
         | primary;
 
-//Need to know where to put the members section
+//Find out where to put the members section:
 grammarDef
     :
       ^(
@@ -85,18 +86,11 @@ optionValue
     ;
 
 
-binary :  {isTopLevelAlternative()}?=>
-          ^(ALT {isE()}?=> RULE_REF o=ops {isE()}?=> RULE_REF EOA) {
-            for(Operator op : $o.opers)
-              op.kind = Operator.Kind.Binary;
-            currentRule.precidenceOpers.add($o.opers);
-           };
-
 ternary : {isTopLevelAlternative()}?=>
-          ^(ALT {isE()}?=>RULE_REF q=op {isE()}?=>RULE_REF c=op f=RULE_REF? EOA) {
+          ^(ALT {isE()}?=>RULE_REF q=simpleOp {isE()}?=>RULE_REF c=simpleOp f=RULE_REF? EOA) {
             if (($f.text == null || $f.text.equals(currentRule.name))) {
               List<Operator> opers = new ArrayList<Operator>();
-              $q.oper.ternary = $c.oper;
+              $q.oper.ternaryOp = $c.oper;
               $q.oper.kind = Operator.Kind.TernaryPair;
               $q.oper.ternaryAfter = $f.text != null;
               opers.add($q.oper);
@@ -104,26 +98,38 @@ ternary : {isTopLevelAlternative()}?=>
             }
             else
               currentRule.terminals.add($text);
-            };
+          };
 
+
+binary :  {isTopLevelAlternative()}?=>
+          ^(ALT {isE()}?=> RULE_REF o=ops {isE()}?=> RULE_REF EOA) {
+            for(Operator op : $o.opers)
+              op.kind = Operator.Kind.Binary;
+            currentRule.precidenceOpers.add($o.opers);
+           };
 
 simplePrefix :  {isTopLevelAlternative()}?=>
-                ^(ALT o=ops {isE()}?=>RULE_REF EOA) {
-                   for (Operator op : $o.opers)
-                     op.kind = Operator.Kind.Prefix;
-                   currentRule.precidenceOpers.add($o.opers);
+                ^(ALT o=sops {isE()}?=>RULE_REF EOA) {
+                    for (Operator op : $o.opers)
+                      op.kind = Operator.Kind.Prefix;
+                    currentRule.precidenceOpers.add($o.opers);
                 };
 
 simpleSuffix :  {isTopLevelAlternative()}?=>
                 ^(ALT {isE()}?=>RULE_REF o=ops EOA) {
-                  System.err.println($text);
                   for(Operator op : $o.opers)
                     op.kind = Operator.Kind.Suffix;
                   currentRule.precidenceOpers.add($o.opers);
                 };
 
+suffix : {isTopLevelAlternative()}?=>
+        ^(ALT {isE()}?=>RULE_REF o=fops  EOA) {
+             for(Operator op : $o.opers)
+               op.kind = Operator.Kind.Suffix;
+             currentRule.precidenceOpers.add($o.opers);
+         };
 
-primary :  {isTopLevelAlternative()}?=> 
+primary :  {isTopLevelAlternative()}?=>
            ^(ALT .*) {
           currentRule.terminals.add($text);
         };
@@ -139,18 +145,70 @@ ops returns [List<Operator> opers]
         (^(ALT o=op{$opers.add($o.oper);} EOA))+ 
       EOB)
     ;
+
+sops returns [List<Operator> opers]
+@init {
+  $opers = new ArrayList<Operator>();
+}
+    : o=simpleOp {$opers.add($o.oper);}
+    | ^(BLOCK 
+        (^(ALT o=simpleOp{$opers.add($o.oper);} EOA))+ 
+      EOB)
+    ;
+
+fops returns [List<Operator> opers]
+@init {
+  $opers = new ArrayList<Operator>();
+}
+    : o=fullOp {$opers.add($o.oper);}
+    | ^(BLOCK 
+        (^(ALT o=fullOp{$opers.add($o.oper);} EOA))+ 
+      EOB)
+    ;
+
+
+
+fullOp returns [Operator oper]
+@init {
+  Operator.Associativity assoc = Operator.Associativity.Left;
+  List<String> opTexts = new ArrayList<String>();
+}
+@after {
+  $oper = new Operator(opTexts, assoc, false);
+}
+    : (l=fullOpVal {opTexts.add($l.text);})+
+    | ^(l=fullOpVal tops=tokenOptions 
+        {assoc = $tops.assoc; opTexts.add($l.text.substring(0,$l.text.lastIndexOf($tops.text)-1));});
+
+
+simpleOp returns [Operator oper]
+@init {
+  Operator.Associativity assoc = Operator.Associativity.Left;
+  List<String> opTexts = new ArrayList<String>();
+}
+@after {
+  $oper = new Operator(opTexts, assoc, true);
+}
+    : (l=opVal {opTexts.add($l.text);})+
+    | ^(l=opVal tops=tokenOptions 
+        {assoc = $tops.assoc; opTexts.add($l.text.substring(0,$l.text.lastIndexOf($tops.text)-1));});
+
+
 op returns [Operator oper]
 @init {
   Operator.Associativity assoc = Operator.Associativity.Left;
-  String opText = null;
+  List<String> opTexts = new ArrayList<String>();
 }
 @after {
-  $oper = new Operator(input.LA(-1), opText, assoc);
-}   : l=opVal {opText = $l.text;}
+  $oper = new Operator(opTexts, assoc, true);
+}
+    : l=opVal {opTexts.add($l.text);}
+      (f=fullOpVal {opTexts.add($f.text);})*
     | ^(l=opVal tops=tokenOptions 
-        {assoc = $tops.assoc; opText = $l.text.substring(0,$l.text.lastIndexOf($tops.text)-1);});
+        {assoc = $tops.assoc; opTexts.add($l.text.substring(0,$l.text.lastIndexOf($tops.text)-1));});
 
 opVal : STRING_LITERAL | CHAR_LITERAL | TOKEN_REF;
+fullOpVal : opVal | {!isE()}?=> RULE_REF;
 
 tokenOptions returns [Operator.Associativity assoc]
 @init {$assoc = Operator.Associativity.Left;}

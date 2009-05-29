@@ -1,13 +1,15 @@
+import java.util.List;
+
+
 class Operator {
   public enum Kind {Prefix, Suffix, Binary, TernaryPair};
   public Kind kind;
-  public int tokenType;
-  public String tokenText;
+  public List<String> tokenTexts;
+  public boolean predictable;
   public enum Associativity {Left, Right};
   public Associativity assoc;
-  public Operator ternary = null;
-  public boolean ternaryAfter;
-  public String ternaryText;
+  public Operator ternaryOp = null;
+  public boolean ternaryAfter;  
   public boolean isBinary() {
     return kind == Kind.Binary;
   }
@@ -26,12 +28,14 @@ class Operator {
   public boolean isLeftAssoc() {
     return assoc == Associativity.Left;
   }
-  public String getSafeTokenText() { return tokenText.replace("%","\\%");}
-  public Operator(int tokenType, String tokenText, Associativity assoc) {
-    this.tokenType = tokenType; this.assoc=assoc; this.tokenText = tokenText;
+  public String getSafePredictiveToken() { return getPredictiveToken().replace("%","\\%");}
+  public List<String> getTokenTexts() {return tokenTexts;}
+  public Operator(List<String> tokenTexts, Associativity assoc, boolean predictable) {
+    this.assoc=assoc; this.tokenTexts = tokenTexts; this.predictable = predictable;
   }
   public String toString() {
     String result = "";
+    if (kind != null)
     switch (kind)
     {
       case Binary: result = "B"; break;
@@ -40,12 +44,12 @@ class Operator {
       case TernaryPair: result = "T"; break;
     }
     result += assoc == Associativity.Right ? "R " : "L ";
-    result += '"' + tokenText + '"';
-    if (ternary != null)
-      result += " (" + ternary.toString() + ")";
+    result += '"' + tokenTexts.toString() + '"';
+    if (ternaryOp != null)
+      result += " (" + ternaryOp.toString() + ")";
     return result; 
   }
-  public String sndop() {
-    return ternary.tokenText;
+  public String getPredictiveToken() {
+    return tokenTexts.get(0);
   }
 }

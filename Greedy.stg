@@ -30,11 +30,13 @@ int <name>_nextp(int p) {
 >>
 
 prec(precl,level,name) ::= <<
-
-<precl:{p|
-	<name>_<if(p.prefix)>u<endif><if(p.ternary)>t<endif>prec[lookupTokenFromGrammarString("<p.safeTokenText>")] = <level>;
-	<name>_assoc[lookupTokenFromGrammarString("<p.safeTokenText>")] = <if(p.rightAssoc)>RIGHT<else>LEFT<endif>;
+<precl:{op|
+<if(op.predictable)>
+	<name>_<if(op.prefix)>u<endif><if(op.ternary)>t<endif>prec[lookupTokenFromGrammarString("<op.safePredictiveToken>")] = <level>;
+	<name>_assoc[lookupTokenFromGrammarString("<op.safePredictiveToken>")] = <if(op.rightAssoc)>RIGHT<else>LEFT<endif>;
+<endif>
 }>
+
 >>
 
 
@@ -44,10 +46,10 @@ exprRule(name,terminals,bops,pops,sops,tops,buildTree) ::= <<
 
 <name> : <name>_expr[0] ;
 <name>_expr[final int p] options {strategy=precedence;}
-   :   <name>_suffix_primaries[p] {;}        //to prevent our predicate from being hoisted
+   :   <name>_suffix_primaries {;}        //to prevent our predicate from being hoisted
        ( options {backtrack=false; }: //also prevents hoisting
 		//binary ops:
-	    {<name>_prec[input.LA(1)]>=p}?=> (<bops;separator="|">)<if(buildTree)>^<endif> <name>_expr[<name>_nextp(p)] {;}
+	    {<name>_prec[input.LA(1)]>=p}?=> <matcher(ops=bops,buildTree=buildTree)> <name>_expr[<name>_nextp(p)] {;}
 	     <if(first(tops))>
 		//ternary ops:
 		| <tops:ternaryOp(op=it, ruleName=name, buildTree=buildTree);separator="
@@ -55,13 +57,13 @@ exprRule(name,terminals,bops,pops,sops,tops,buildTree) ::= <<
        )*
    ;
 
-<name>_suffix_primaries[final int p]
-  : <name>_primaries[p]<if(sops)>
+<name>_suffix_primaries
+  : <name>_primaries<if(sops)>
   //suffix ops
-  ((<sops;separator="|">)<if(buildTree)>^<endif>)*<endif>
+  (<matcher(ops=sops,buildTree=buildTree)>)*<endif>
   ;
 
-<name>_primaries[final int p]
+<name>_primaries
 	:	<[terminals,prefixOps(pops=pops,name=name,buildTree=buildTree)];separator="|">
 	;
 
@@ -71,9 +73,13 @@ prefixOps(pops, name, buildTree) ::= <<
 <if(pops)>
 
   //prefix ops
-  <if(rest(pops))>(<pops;separator="|">)<else><pops><endif><if(buildTree)>^<endif>  <name>_expr[<name>_uprec[input.LA(-1)\] ]<endif>
+  <matcher(ops=pops,buildTree=buildTree)> <name>_expr[<name>_uprec[input.LA(-1)\] ]<endif>
 >>
 
 ternaryOp(op, ruleName, buildTree) ::= <<
-{<name>_tprec[input.LA(1)]>=p}?=> <op.tokenText><if(buildTree)>^<endif> {;} <ruleName>_expr[0] <op.ternaryText><if(buildTree)>!<endif> <if(op.ternaryAfter)><ruleName>_expr[p]<endif>
+{<name>_tprec[input.LA(1)]>=p}?=> <op.tokenTexts><if(buildTree)>^<endif> {;} <ruleName>_expr[0] <op.ternaryOp.tokenTexts><if(buildTree)>!<endif> <if(op.ternaryAfter)><ruleName>_expr[p]<endif>
+>>
+
+matcher(ops, buildTree) ::= <<
+<if(rest(ops))>(<endif><ops:{<it.tokenTexts>};separator="|"><if(rest(ops))>)<endif><if(buildTree)>^<endif>
 >>
