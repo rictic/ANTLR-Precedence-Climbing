@@ -56,7 +56,7 @@ public class ExpressionTransformer {
     membersText += staticHeader;
     
     for (ExpressionRule rule: expressions) {
-      System.err.println("rewriteing rule: " + rule.name + "\nwith precidences: " + rule.precidenceOpers);
+//       System.err.println("rewriteing rule: " + rule.name + "\nwith precidences: " + rule.precidenceOpers);
       StringTemplate header = stg.getInstanceOf("header");
       header.setAttribute("precedences", rule.precidenceOpers);
       header.setAttribute("name", rule.name);
@@ -80,10 +80,10 @@ public class ExpressionTransformer {
           }
         }
       }
-      System.err.println("binaries " + binaryOps);
-      System.err.println("primaries " + rule.terminals);
-      System.err.println("ternaries " + ternaryOps);
-      System.err.println("prefixes " + prefixOps);
+//       System.err.println("binaries " + binaryOps);
+//       System.err.println("primaries " + rule.terminals);
+//       System.err.println("ternaries " + ternaryOps);
+//       System.err.println("prefixes " + prefixOps);
       StringTemplate ruleTemplate = stg.getInstanceOf("exprRule");
       ruleTemplate.setAttribute("name",rule.name);
       ruleTemplate.setAttribute("terminals", rule.terminals);

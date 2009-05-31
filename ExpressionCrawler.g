@@ -52,7 +52,7 @@ rule
  : ^( RULE v=ID (ARG .*)? ('returns' .*)?
 	  (^('throws' .*))? opts=optionsSpec 
 	  { if ($opts.isExpression) {
-	    System.err.println(ruleTree.toStringTree());
+/*	    System.err.println(ruleTree.toStringTree());*/
 	    currentRule = new ExpressionRule($v.text, ruleTree.getTokenStartIndex(), ruleTree.getTokenStopIndex());
 	  } }
 	  .* )
